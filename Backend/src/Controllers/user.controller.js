@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { User } from "../models/user.model.js";
+import { options } from "../constants.js";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -87,11 +88,6 @@ const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -105,4 +101,17 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
-export { generateAccessAndRefreshToken, registerUser ,loginUser};
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    { $unset: { refreshToken: 1 } },
+    { new: true }
+  );
+  return res
+    .status(200,"")
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "user logged out successfully"));
+});
+
+export { generateAccessAndRefreshToken, registerUser, loginUser,logoutUser };
