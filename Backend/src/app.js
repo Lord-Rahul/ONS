@@ -34,5 +34,9 @@ app.use(
   })
 );
 
+import userRoutes from "./routes/user.routes.js";
+
+app.use(`${process.env.API_URL}/users`, userRoutes);
+
 // Export the Express app instance
 export { app };
