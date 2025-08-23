@@ -2,6 +2,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import morgan from "morgan";
 
 // Create an Express application
 const app = express();
@@ -18,6 +19,9 @@ app.use(
     limit: "16kb",
   })
 );
+
+const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
+app.use(morgan(morganFormat));
 
 // Serve static files from the 'public' directory
 app.use(express.static("public"));
