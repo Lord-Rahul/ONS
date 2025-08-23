@@ -36,8 +36,10 @@ app.use(
 );
 
 import userRoutes from "./routes/user.routes.js";
+import categoryRoutes from "./routes/category.routes.js";
 
 app.use(`${api}/users`, userRoutes);
+app.use(`${api}/category`, categoryRoutes);
 
 // Export the Express app instance
 export { app };
