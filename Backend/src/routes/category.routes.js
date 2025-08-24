@@ -6,7 +6,6 @@ import {
   getAllCategories,
   getCategoryById,
 } from "../Controllers/category.controller.js";
-import { api } from "../constants.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyAdmin } from "../middlewares/admin.middleware.js";
 
