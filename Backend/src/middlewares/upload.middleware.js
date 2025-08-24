@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
@@ -28,11 +29,11 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024,
   },
 
-  fileFilter: (req, res, cb) => {
-    if (file.mimetype.startWith("image/")) {
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
-      cb(new ApiError(400, "only images files are allowed !"), false);
+      cb(new Error("Only image files are allowed!"), false);
     }
   },
 });
@@ -42,14 +43,14 @@ export const uploadSingle = upload.single("image");
 export const uploadMultiple = upload.array("images", 5);
 
 export const uploadProductImages = upload.fields([
-  { name: "images", maxCount: 1 }, //main product image
+  { name: "image", maxCount: 1 }, //main product image
   { name: "images", maxCount: 4 }, //additional images
 ]);
 
-export const deleteFromCloudinary = asyncHandler(async (publicId) => {
+export const deleteFromCloudinary = async (publicId) => {
   const result = await cloudinary.uploader.destroy(publicId);
   return result;
-});
+};
 
 export const getPublicIdFromUrl = (url) => {
   const parts = url.split("/");

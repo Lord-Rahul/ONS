@@ -32,8 +32,8 @@ const uploadMultipleImages = asyncHandler(async (req, res) => {
 
   const uploadedImages = req.files.map((file) => ({
     url: file.path,
-    publicId: req.file.filename,
-    originalName: req.file.originalName,
+    publicId: file.filename,
+    originalName: file.originalname,
   }));
 
   return res.status(200).json(
@@ -59,8 +59,8 @@ const uploadProductImages = asyncHandler(async (req, res) => {
     };
   }
 
-  if (req.files.image && req.files.images.length > 0) {
-    result.uploadedImages = req.files.images.map((file) => ({
+  if (req.files.images && req.files.images.length > 0) {
+    result.additionalImages = req.files.images.map((file) => ({
       url: file.path,
       publicId: file.filename,
       originalName: file.originalname,
@@ -86,7 +86,7 @@ const uploadProductImages = asyncHandler(async (req, res) => {
     );
 });
 
-const deleteImages = asyncHandler(async (req, res) => {
+const deleteImage = asyncHandler(async (req, res) => {
   const { publicId } = req.params;
 
   if (!publicId) {
@@ -95,7 +95,7 @@ const deleteImages = asyncHandler(async (req, res) => {
 
   const result = await deleteFromCloudinary(publicId);
 
-  if (result.result !== "ok") {
+  if (result.result !== "ok" && result.result !== "not found") {
     throw new ApiError("400, failed to delete image ");
   }
 
@@ -117,10 +117,10 @@ const deleteImageByUrl = asyncHandler(async (req, res) => {
     throw new ApiError(400, "image url is required");
   }
 
-  const publicId = getPublicIdFromUrl(imageUrl);
+  const publicId = await getPublicIdFromUrl(imageUrl);
   const result = deleteFromCloudinary(publicId);
 
-  if (result.result !== "ok") {
+  if (result.result !== "ok" && result.result !== "not found") {
     throw new ApiError(400, "Failed to delete image");
   }
 
@@ -141,6 +141,6 @@ export {
   uploadMultipleImages,
   uploadSingleImage,
   uploadProductImages,
-  deleteImages,
-  deleteImageByUrl
+  deleteImage,
+  deleteImageByUrl,
 };
