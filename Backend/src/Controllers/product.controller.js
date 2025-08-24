@@ -197,4 +197,25 @@ const getAllProducts = asyncHandler(async (req, res) => {
     );
 });
 
-export { addProduct, getAllProducts };
+const getProoductById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid product Id");
+  }
+
+  const product = await Product.findById(id).populate(
+    "category",
+    "name color icon "
+  );
+
+  if (!product) {
+    throw new ApiError(404, "Product not found ");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, product, "Product fetched successfully"));
+});
+
+export { addProduct, getAllProducts, getProoductById };
