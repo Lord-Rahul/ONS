@@ -9,8 +9,6 @@ const addProduct = asyncHandler(async (req, res) => {
   const {
     name,
     description,
-    image,
-    images,
     brand,
     price,
     category,
@@ -25,13 +23,20 @@ const addProduct = asyncHandler(async (req, res) => {
     sleeveType,
   } = req.body;
 
-  if (!name || !description || !image || !price || !category || !clothingType) {
+  // Validate required fields
+  if (!name || !description || !price || !category || !clothingType) {
     throw new ApiError(
       400,
-      "Name, descreption , image , price , category and clothing type is needed"
+      "Name, description, price, category and clothing type are required"
     );
   }
 
+  // Validate that at least main image is uploaded
+  if (!req.files || !req.files.image || !req.files.image[0]) {
+    throw new ApiError(400, "Main product image is required");
+  }
+
+  // Find category
   let categoryDoc;
   if (mongoose.Types.ObjectId.isValid(category)) {
     categoryDoc = await Category.findById(category);
@@ -45,30 +50,68 @@ const addProduct = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Category not found");
   }
 
+  // Prepare image data
+  const mainImage = {
+    url: req.files.image[0].path,
+    publicId: req.files.image[0].filename,
+    originalName: req.files.image[0].originalname,
+  };
+
+  const additionalImages = req.files.images
+    ? req.files.images.map((file) => ({
+        url: file.path,
+        publicId: file.filename,
+        originalName: file.originalname,
+      }))
+    : [];
+
+  // Parse sizes if it's a string (from form-data)
+  let parsedSizes = sizes;
+  if (typeof sizes === "string") {
+    try {
+      parsedSizes = JSON.parse(sizes);
+    } catch (error) {
+      parsedSizes = [];
+    }
+  }
+
+  // Parse colors if it's a string (from form-data)
+  let parsedColors = colors;
+  if (typeof colors === "string") {
+    try {
+      parsedColors = JSON.parse(colors);
+    } catch (error) {
+      parsedColors = [];
+    }
+  }
+
+  // Create product
   const product = await Product.create({
     name: name.trim(),
     description,
-    image,
-    images: images || [],
-    brand,
-    price,
+    mainImage,
+    additionalImages,
+    brand: brand || "ONS",
+    price: Number(price),
     category: categoryDoc._id,
     clothingType,
     fabric,
     occasion,
-    sizes: sizes || [],
-    colors: colors || [],
-    countInStock: countInStock || 0,
+    sizes: parsedSizes || [],
+    colors: parsedColors || [],
+    countInStock: Number(countInStock) || 0,
     workType,
     neckType,
     sleeveType,
   });
 
-  await product.populate("category", "name");
+  await product.populate("category", "name color");
 
   return res
     .status(201)
-    .json(new ApiResponse(201, product, " Product is created successfully "));
+    .json(
+      new ApiResponse(201, product, "Product created successfully with images")
+    );
 });
 
 const getAllProducts = asyncHandler(async (req, res) => {

@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-
 const productSchema = mongoose.Schema(
   {
     name: {
@@ -15,11 +14,19 @@ const productSchema = mongoose.Schema(
       required: [true, "Product description is required"],
       maxLength: [2000, "Description length cannot exceed 1000 characters"],
     },
-    image: {
-      type: String,
-      required: true,
+    mainImage: {
+      url: { type: String, required: true },
+      publicId: { type: String, required: true },
+      originalName: { type: String },
     },
-    images: [String],
+
+    additionalImages: [
+      {
+        url: { type: String, required: true },
+        publicId: { type: String, required: true },
+        originalName: { type: String },
+      },
+    ],
 
     brand: { type: String, trim: true, default: "ONS" },
 
