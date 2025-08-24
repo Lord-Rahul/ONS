@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { Product } from "../models/product.model.js";
 import { Category } from "../models/category.model.js";
 import mongoose from "mongoose";
+import { deleteFromCloudinary } from "../middlewares/upload.middleware.js";
 
 const addProduct = asyncHandler(async (req, res) => {
   const {
@@ -218,4 +219,52 @@ const getProoductById = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, product, "Product fetched successfully"));
 });
 
-export { addProduct, getAllProducts, getProoductById };
+const deleteProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "invalid product ID");
+  }
+
+  const product = await Product.findById(id);
+
+  if (!product) {
+    throw new ApiError(404, "product not found");
+  }
+
+  const imagesToDelete = [];
+
+  if (product.mainImage && product.mainImage.publicId) {
+    imagesToDelete.push(product, mainImage.publicId);
+  }
+
+  if (product.additionalImages && product.additionalImages.publicId) {
+    product.additionalImages.forEach((img) => {
+      if (img.publicId) {
+        imagesToDelete.push(img.publicId);
+      }
+    });
+  }
+
+  for (const publicId of imagesToDelete) {
+    try {
+      await deleteFromCloudinary(publicId);
+    } catch (error) {
+      onsole.log(`Failed to delete image ${publicId} from Cloudinary:`, error);
+    }
+  }
+
+  await Product.findByIdAndDelete(id);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { deletedProductId: id },
+        "Product deleted successfully"
+      )
+    );
+});
+
+export { addProduct, getAllProducts, getProoductById ,deleteProduct};

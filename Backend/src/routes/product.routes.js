@@ -1,5 +1,6 @@
 import {
   addProduct,
+  deleteProduct,
   getAllProducts,
   getProoductById,
 } from "../Controllers/product.controller.js";
@@ -13,5 +14,6 @@ const router = Router();
 router.route("/addproduct").post(verifyJWT, verifyAdmin, uploadProductImages,addProduct);
 router.route("/").get(getAllProducts);
 router.route("/:id").get(getProoductById);
+router.route("/:id").delete(verifyJWT, verifyAdmin, deleteProduct);
 
 export default router;
