@@ -85,3 +85,62 @@ const uploadProductImages = asyncHandler(async (req, res) => {
       )
     );
 });
+
+const deleteImages = asyncHandler(async (req, res) => {
+  const { publicId } = req.params;
+
+  if (!publicId) {
+    throw new ApiError(400, "public id is required ");
+  }
+
+  const result = await deleteFromCloudinary(publicId);
+
+  if (result.result !== "ok") {
+    throw new ApiError("400, failed to delete image ");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { publicId, deleted: true },
+        "image deleted successfully "
+      )
+    );
+});
+
+const deleteImageByUrl = asyncHandler(async (req, res) => {
+  const { imageUrl } = req.body;
+
+  if (!imageUrl) {
+    throw new ApiError(400, "image url is required");
+  }
+
+  const publicId = getPublicIdFromUrl(imageUrl);
+  const result = deleteFromCloudinary(publicId);
+
+  if (result.result !== "ok") {
+    throw new ApiError(400, "Failed to delete image");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        imageUrl,
+        publicId,
+        deleted: true,
+      },
+      "Image deleted successfully "
+    )
+  );
+});
+
+export {
+  uploadMultipleImages,
+  uploadSingleImage,
+  uploadProductImages,
+  deleteImages,
+  deleteImageByUrl
+};
