@@ -176,4 +176,65 @@ const getOrderById = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, order, "Order fetched successfully"));
 });
 
-export { placeOrder, getUserOrders ,getOrderById};
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status, trackingNumber } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "invalid order id ");
+  }
+
+  const validStatuses = [
+    "pending",
+    "confirmed",
+    "processing",
+    "shipped",
+    "delivered",
+    "returned",
+    "refunded",
+  ];
+
+  if (!status || !validStatuses.includes(status)) {
+    throw new ApiError(400, "invalid order status");
+  }
+
+  const order = await Order.findById(id);
+
+  if (!order) {
+    throw new ApiError(404, "Order not found ");
+  }
+
+  const updateData = { status };
+
+  switch (status) {
+    case "confirmed":
+      updateData.confirmedAt = new Date();
+      break;
+    case "shipped":
+      updateData.shippedAt = new Date();
+      if (trackingNumber) updateData.trackingNumber = trackingNumber;
+      break;
+    case "delivered":
+      updateData.deliveredAt = new Date();
+      updateData.actualDeliveryDate = new Date();
+      break;
+    case "cancelled":
+      updateData.cancelledAt = new Date();
+      break;
+  }
+
+  const updateOrder = await Order.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  })
+    .populate("user", "fullName email phone")
+    .populate("items.product", "name mainImage clothingType");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updateOrder, `Order status updated to ${status}`)
+    );
+});
+
+export { placeOrder, getUserOrders, getOrderById, updateOrderStatus };
