@@ -115,4 +115,44 @@ const placeOrder = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, order, "order placed successfully "));
 });
 
-export { placeOrder };
+const getUserOrders = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { page = 1, limit = 10, status } = req.query;
+
+  const filter = { user: userId };
+  if (status && status !== "all") {
+    filter.status = status;
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const orders = await Order.find(filter)
+    .populate("items.product", "name mainImage clothingType")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(Number(limit));
+
+  const totalOrders = await Order.countDocuments(filter);
+  const totalPages = Math.ceil(totalOrders / Number(limit));
+
+  const paginationInfo = {
+    currentPage: Number(page),
+    totalPages,
+    totalOrders,
+    hasNextPage: Number(page) < totalPages,
+    hasPrevPage: Number(page) > 1,
+  };
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        orders,
+        pagination: paginationInfo,
+      },
+      "Orders fetched successfully"
+    )
+  );
+});
+
+export { placeOrder, getUserOrders };

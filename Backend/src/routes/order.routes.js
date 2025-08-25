@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { placeOrder } from "../Controllers/order.controller.js";
+import { getUserOrders, placeOrder } from "../Controllers/order.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -7,5 +7,6 @@ const router = Router();
 router.use(verifyJWT);
 
 router.route("/place").post(placeOrder);
+router.route("/").get(getUserOrders);
 
 export default router;
