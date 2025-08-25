@@ -3,6 +3,7 @@ import { ApiError } from "../utils/apiError.js";
 import { Category } from "../models/category.model.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import mongoose from "mongoose";
+import { deleteFromCloudinary } from "../middlewares/upload.middleware.js";
 
 const addCategory = asyncHandler(async (req, res) => {
   const { name, color, icon } = req.body;
@@ -122,6 +123,10 @@ const deleteCategory = asyncHandler(async (req, res) => {
   const category = await Category.findById(id);
   if (!category) {
     throw new ApiError(404, "category not found ");
+  }
+
+  if (category.image && category.image.publicId) {
+    await deleteFromCloudinary(category.image.publicId);
   }
 
   await Category.findByIdAndDelete(id);
