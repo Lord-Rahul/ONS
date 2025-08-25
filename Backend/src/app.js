@@ -5,16 +5,13 @@ import cors from "cors";
 import morgan from "morgan";
 import { api } from "./constants.js";
 
-// Create an Express application
 const app = express();
 
-// Enable Cross-Origin Resource Sharing
+
 app.use(cors());
 
-// Parse cookies from incoming requests
 app.use(cookieParser());
 
-// Parse JSON bodies with a size limit
 app.use(
   express.json({
     limit: "16kb",
@@ -24,10 +21,8 @@ app.use(
 const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat));
 
-// Serve static files from the 'public' directory
 app.use(express.static("public"));
 
-// Parse URL-encoded bodies with a size limit
 app.use(
   express.urlencoded({
     extended: true,
@@ -47,5 +42,4 @@ app.use(`${api}/products`, productRoutes);
 app.use(`${api}/upload`, uploadRoutes);
 app.use(`${api}/cart`, cartRoutes);
 
-// Export the Express app instance
 export { app };
