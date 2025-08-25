@@ -155,4 +155,25 @@ const getUserOrders = asyncHandler(async (req, res) => {
   );
 });
 
-export { placeOrder, getUserOrders };
+const getOrderById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid order ID");
+  }
+
+  const order = await Order.findOne({ _id: id, user: userId })
+    .populate("items.product", "name mainImage clothingType brand")
+    .populate("user", "fullName email phone");
+
+  if (!order) {
+    throw new ApiError(404, "Order not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, order, "Order fetched successfully"));
+});
+
+export { placeOrder, getUserOrders ,getOrderById};
