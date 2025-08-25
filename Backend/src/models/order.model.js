@@ -1,14 +1,60 @@
 import mongoose from "mongoose";
 
-const orderSchema = new mongoose.Schema(
+const orderItemSchema = new mongoose.Schema(
   {
-    orderItems: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "OrderItem",
-        required: true,
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    productSnapshot: {
+      name: { type: String, required: true },
+      mainImage: {
+        url: String,
+        publicId: String,
       },
-    ],
+      clothingType: String,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    size: {
+      type: String,
+      enum: ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"],
+      required: true,
+    },
+    color: String,
+    priceAtOrder: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    itemSubtotal: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+  },
+
+  { _id: true }
+);
+
+const shippingAddressSchema = mongoose.Schema(
+  {
+    fullName: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+    },
     address1: {
       type: String,
       lowercase: true,
@@ -73,39 +119,117 @@ const orderSchema = new mongoose.Schema(
         "Puducherry",
       ],
     },
+  },
+  { _id: false }
+);
 
+const paymentDetailsSchema = mongoose.Schema(
+  {
+    method: {
+      type: String,
+      enum: ["PhonePe", "UPI", "Card", "Net Banking", "COD", "Wallet"],
+      required: true,
+    },
     status: {
       type: String,
-      required: [true, "Order status is required"],
-      enum: [
-        "Pending",
-        "Processing",
-        "Shipped",
-        "Delivered",
-        "Cancelled",
-        "Returned",
-      ],
-      default: "Pending",
+      enum: ["pending", "processing", "completed", "failed", "refunded"],
+      default: "pending",
     },
+    transactionId: String,
+    gatewayOrderId: String,
+    gatewayPaymentId: String,
+    paidAt: Date,
+    refundedAt: Date,
+    refundAmount: Number,
+  },
+  { _id: false }
+);
 
-    totalPrice: {
-      type: Number,
-      required: [true, "Total price is required"],
+const orderSchema = mongoose.Schema(
+  {
+    orderNumber: {
+      type: String,
+      required: true,
+      unique: true,
     },
-
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
-    dateOrdered: {
-      type: Date,
-      default: Date.now,
+    items: [orderItemSchema],
+    itemsSubtotal: {
+      type: Number,
+      required: true,
+      min: 0,
     },
-  },
+    shippingCharges: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    taxAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    discountAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    shippingAddress: {
+      type: shippingAddressSchema,
+      required: true,
+    },
+    paymentDetails: {
+      type: paymentDetailsSchema,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "out_for_delivery",
+        "delivered",
+        "cancelled",
+        "returned",
+        "refunded",
+      ],
+      default: "pending",
+    },
+    trackingNumber: String,
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
 
+    // Important timestamps
+    confirmedAt: Date,
+    shippedAt: Date,
+    deliveredAt: Date,
+    cancelledAt: Date,
+  },
   { timestamps: true }
 );
+
+orderSchema.pre("save", async function (next) {
+  if (this.isNew) {
+    const timestamp = Date.now().toString();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    this.orderNumber = `ONS${timestamp.slice(-6)}${random}`;
+  }
+  next();
+});
+
+orderSchema.pre('save',function(next){
+  this.itemsSubtotal = this.items.reduce((total,item)=>total+item.itemSubtotal,0)
+  this.totalAmount=this.itemsSubtotal+this.shippingCharges+this.taxAmount - this.discountAmount
+  next()
+})
 
 export const Order = mongoose.model("Order", orderSchema);
