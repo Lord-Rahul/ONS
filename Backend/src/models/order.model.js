@@ -63,7 +63,6 @@ const shippingAddressSchema = mongoose.Schema(
     address2: {
       type: String,
       lowercase: true,
-      
     },
     city: {
       type: String,
@@ -195,6 +194,7 @@ const orderSchema = mongoose.Schema(
         "out_for_delivery",
         "delivered",
         "cancelled",
+        "cancellation_requested",
         "returned",
         "refunded",
       ],
@@ -216,7 +216,7 @@ const orderSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-orderSchema.pre("save",function (next) {
+orderSchema.pre("save", function (next) {
   if (this.isNew) {
     const timestamp = Date.now().toString();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -225,10 +225,17 @@ orderSchema.pre("save",function (next) {
   next();
 });
 
-orderSchema.pre('save',function(next){
-  this.itemsSubtotal = this.items.reduce((total,item)=>total+item.itemSubtotal,0)
-  this.totalAmount=this.itemsSubtotal+this.shippingCharges+this.taxAmount - this.discountAmount
-  next()
-})
+orderSchema.pre("save", function (next) {
+  this.itemsSubtotal = this.items.reduce(
+    (total, item) => total + item.itemSubtotal,
+    0
+  );
+  this.totalAmount =
+    this.itemsSubtotal +
+    this.shippingCharges +
+    this.taxAmount -
+    this.discountAmount;
+  next();
+});
 
 export const Order = mongoose.model("Order", orderSchema);

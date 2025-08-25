@@ -3,6 +3,7 @@ import {
   getOrderById,
   getUserOrders,
   placeOrder,
+  requestCancellation,
   updateOrderStatus,
 } from "../Controllers/order.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -15,6 +16,7 @@ router.use(verifyJWT);
 router.route("/place").post(placeOrder);
 router.route("/").get(getUserOrders);
 router.route("/:id").get(getOrderById);
-router.route("/:id/status").put(verifyAdmin,updateOrderStatus)
+router.route("/:id/status").put(verifyAdmin, updateOrderStatus);
+router.route("/:id/cancel-request").put(requestCancellation);
 
 export default router;

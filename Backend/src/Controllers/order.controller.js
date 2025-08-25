@@ -237,4 +237,47 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     );
 });
 
-export { placeOrder, getUserOrders, getOrderById, updateOrderStatus };
+const requestCancellation = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { cancellationReason } = req.body;
+  const userId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400,"invalid order ID");
+  }
+
+  const order = await Order.findOne({ _id: id, user: userId });
+  if (!order) {
+    throw new ApiError(404, "order not found ");
+  }
+
+
+  const cancellationStatuses = ["pending", "confirmed", "processing"];
+  if (!cancellationStatuses.includes(order.status)) {
+    throw new ApiError(
+      400,
+      `cannot request cancellation for order with status ${order.status}`
+    );
+  }
+
+  const updateData = {
+  status: "cancellation_requested",
+  cancellationReason: cancellationReason || "Customer requested cancellation",
+};
+
+  const updateOrder = await Order.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  })
+    .populate("user", "fullName email phone ")
+    .populate("items.product", "name mainImage clothingType");
+
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, updateOrder, "cancellation request submitted succesfully"))
+
+});
+
+
+export { placeOrder, getUserOrders, getOrderById, updateOrderStatus,requestCancellation };
