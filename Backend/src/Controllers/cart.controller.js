@@ -172,4 +172,20 @@ const removeFromCart = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, cart, "item removed from cart successfully "));
 });
 
-export { getCart, addToCart, updateCartItem, removeFromCart };
+const clearCart = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const cart = await Cart.findOne({ user: userId });
+  if (!cart) {
+    throw new ApiError(404, "cart not found");
+  }
+
+  cart.items = [];
+  await cart.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, cart, "cart cleared successfully "));
+});
+
+export { getCart, addToCart, updateCartItem, removeFromCart, clearCart };
