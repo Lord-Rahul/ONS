@@ -40,7 +40,8 @@ const addToCart = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Product not found");
   }
 
-  const sizeInfo = product.sizes.find((s) => s.size === size);o
+  const sizeInfo = product.sizes.find((s) => s.size === size);
+  o;
 
   if (!sizeInfo) {
     throw new ApiError(400, "selected size not available");
@@ -96,4 +97,56 @@ const addToCart = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, cart, "item added to cart successfully "));
 });
 
-export { getCart, addToCart };
+const updateCartItem = asyncHandler(async (req, res) => {
+  const { itemId } = req.params;
+  const { quantity } = req.body;
+  const userId = req.user._id;
+
+  if (!quantity || quantity < 1) {
+    throw new ApiError(400, "Quantity must be atleast 1 ");
+  }
+
+  const cart = await Cart.findOne({ user: userId });
+
+  if (!cart) {
+    throw new ApiError(404, "cart not find ");
+  }
+
+  const itemIndex = cart.items.findIndex(
+    (item) => item._id.toString() === itemId
+  );
+
+  if (itemIndex === -1) {
+    throw new ApiError(404, "Item not found in cart");
+  }
+
+  const product = await Product.findById(cart.items[itemIndex].product);
+  if (!product || !Array.isArray(product.sizes)) {
+    throw new ApiError(400, "product or sizes not found ");
+  }
+
+  const sizeInfo = product.sizes.find(
+    (s) => s.size === cart.items[itemIndex].size
+  );
+  if (!sizeInfo) {
+    throw new ApiError(400, "selected size not available ");
+  }
+
+  if (quantity > sizeInfo.stock) {
+    throw new ApiError(400, `only ${sizeInfo.stock} items available `);
+  }
+
+  cart.items[itemIndex].quantity = Number(quantity);
+  await cart.save();
+
+  await cart.populate({
+    path: "items.product",
+    select: "name mainImage price countInStock sizes clothingType",
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, cart, "cart item upload successfully "));
+});
+
+export { getCart, addToCart, updateCartItem };
