@@ -149,4 +149,27 @@ const updateCartItem = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, cart, "cart item upload successfully "));
 });
 
-export { getCart, addToCart, updateCartItem };
+const removeFromCart = asyncHandler(async (req, res) => {
+  const { itemId } = req.params;
+  const userId = req.user._id;
+
+  const cart = await Cart.findOne({ user: userId });
+  if (!cart) {
+    throw new ApiError(404, "Cart not found ");
+  }
+
+  cart.items = cart.items.filter((item) => item._id.toString() !== itemId);
+
+  await cart.save();
+
+  await cart.populate({
+    path: "items.product",
+    select: "name mainImage price countInStock sizes clothingType",
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, cart, "item removed from cart successfully "));
+});
+
+export { getCart, addToCart, updateCartItem, removeFromCart };
