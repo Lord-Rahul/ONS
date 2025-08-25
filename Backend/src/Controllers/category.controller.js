@@ -5,7 +5,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import mongoose from "mongoose";
 
 const addCategory = asyncHandler(async (req, res) => {
-  const { name, color, icon, image } = req.body;
+  const { name, color, icon } = req.body;
 
   if (!name) {
     throw new ApiError(400, "category name is required ");
@@ -18,13 +18,20 @@ const addCategory = asyncHandler(async (req, res) => {
   if (existingCategory) {
     throw new ApiError(409, "Category already exists");
   }
-
-  const category = await Category.create({
+  const categoryData = {
     name: name.trim(),
     color,
     icon,
-    image,
-  });
+  };
+
+  if (req.file) {
+    categoryData.image = {
+      url: req.file.path,
+      publicId: req.file.filename,
+      originalName: req.file.originalname,
+    };
+  }
+  const category = await Category.create(categoryData);
 
   return res
     .status(201)
@@ -32,7 +39,7 @@ const addCategory = asyncHandler(async (req, res) => {
 });
 
 const getAllCategories = asyncHandler(async (req, res) => {
-  const categories = await Category.find({}).sort({ createdAT: -1 });
+  const categories = await Category.find({}).sort({ createdAt: -1 });
 
   return res
     .status(200)
@@ -47,10 +54,6 @@ const getCategoryById = asyncHandler(async (req, res) => {
   }
   const category = await Category.findById(id);
 
-  if (id != category._id) {
-    throw new ApiError(500, "category not found");
-  }
-
   if (!category) {
     throw new ApiError(404, "category not found");
   }
@@ -62,7 +65,7 @@ const getCategoryById = asyncHandler(async (req, res) => {
 
 const updateCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, color, icon, image } = req.body;
+  const { name, color, icon } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new ApiError(400, "Invalid category ID format");
@@ -83,19 +86,24 @@ const updateCategory = asyncHandler(async (req, res) => {
     }
   }
 
-  const updatedCategory = await Category.findByIdAndUpdate(
-    id,
-    {
-      ...(name && { name: name.trim() }),
-      ...(color && { color }),
-      ...(icon && { icon }),
-      ...(image && { image }),
-    },
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
+  const updateData = {
+    ...(name && { name: name.trim() }),
+    ...(color && { color }),
+    ...(icon && { icon }),
+  };
+
+  if (req.file) {
+    updateData.image = {
+      url: req.file.path,
+      publicId: req.file.filename,
+      originalName: req.file.originalname,
+    };
+  }
+
+  const updatedCategory = await Category.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
 
   return res
     .status(200)
@@ -123,12 +131,10 @@ const deleteCategory = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "category deleted sucessfully "));
 });
 
-
-
 export {
   addCategory,
   getAllCategories,
   getCategoryById,
   updateCategory,
-  deleteCategory
+  deleteCategory,
 };

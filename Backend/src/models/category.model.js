@@ -10,7 +10,11 @@ const categorySchema = new mongoose.Schema(
     },
     color: String,
     icon: String,
-    image: String,
+    image: {
+      url: { type: String },
+      publicId: { type: String },
+      originalName: { type: String },
+    },
   },
   { timestamps: true }
 );
