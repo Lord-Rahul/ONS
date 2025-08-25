@@ -41,7 +41,6 @@ const addToCart = asyncHandler(async (req, res) => {
   }
 
   const sizeInfo = product.sizes.find((s) => s.size === size);
-  o;
 
   if (!sizeInfo) {
     throw new ApiError(400, "selected size not available");

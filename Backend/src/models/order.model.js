@@ -63,7 +63,7 @@ const shippingAddressSchema = mongoose.Schema(
     address2: {
       type: String,
       lowercase: true,
-      required: [true, "address is required"],
+      
     },
     city: {
       type: String,
@@ -149,7 +149,6 @@ const orderSchema = mongoose.Schema(
   {
     orderNumber: {
       type: String,
-      required: true,
       unique: true,
     },
     user: {
@@ -217,7 +216,7 @@ const orderSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-orderSchema.pre("save", async function (next) {
+orderSchema.pre("save",function (next) {
   if (this.isNew) {
     const timestamp = Date.now().toString();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();

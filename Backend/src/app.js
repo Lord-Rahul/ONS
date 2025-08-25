@@ -7,7 +7,6 @@ import { api } from "./constants.js";
 
 const app = express();
 
-
 app.use(cors());
 
 app.use(cookieParser());
@@ -29,7 +28,7 @@ app.use(
     limit: "16kb",
   })
 );
-
+import orderRouter from "./routes/order.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import productRoutes from "./routes/product.routes.js";
@@ -41,5 +40,6 @@ app.use(`${api}/category`, categoryRoutes);
 app.use(`${api}/products`, productRoutes);
 app.use(`${api}/upload`, uploadRoutes);
 app.use(`${api}/cart`, cartRoutes);
+app.use(`${api}/orders`, orderRouter);
 
 export { app };
