@@ -37,7 +37,7 @@ import uploadRoutes from "./routes/upload.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import paymentsRoutes from "./routes/payments.routes.js";
-import { testEmail } from "./Controllers/test.js";
+
 
 app.use(`${api}/users`, userRoutes);
 app.use(`${api}/category`, categoryRoutes);
@@ -47,5 +47,5 @@ app.use(`${api}/cart`, cartRoutes);
 app.use(`${api}/orders`, orderRouter);
 app.use(`${api}/payments`, paymentRoutes);
 app.use(`${api}/payments`, paymentsRoutes);
-app.get('/test-email', testEmail);
+
 export { app };
