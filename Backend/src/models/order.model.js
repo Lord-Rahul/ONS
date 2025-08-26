@@ -201,6 +201,8 @@ const orderSchema = mongoose.Schema(
       default: "pending",
     },
     trackingNumber: String,
+    cancellationReason: String,
+
     totalAmount: {
       type: Number,
       required: true,

@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 export const PHONEPE_CONFIG = {
   MERCHANT_ID: process.env.PHONEPE_MERCHANT_ID,
   SALT_KEY: process.env.PHONEPE_SALT_KEY,
