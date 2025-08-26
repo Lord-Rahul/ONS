@@ -54,7 +54,8 @@ const initiatePayment = asyncHandler(async (req, res) => {
     if (paymentResponse.success) {
       await Order.findByIdAndUpdate(orderId, {
         "paymentDetails.transactionId": transactionId,
-        "paymentDetails.gatewayOrderId": paymentResponse.data.merchantTransactionId,
+        "paymentDetails.gatewayOrderId":
+          paymentResponse.data.merchantTransactionId,
         "paymentDetails.status": "processing",
       });
 
@@ -62,7 +63,8 @@ const initiatePayment = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           {
-            paymentUrl: paymentResponse.data.instrumentResponse.redirectInfo.url,
+            paymentUrl:
+              paymentResponse.data.instrumentResponse.redirectInfo.url,
             transactionId,
             orderId,
           },
@@ -70,19 +72,20 @@ const initiatePayment = asyncHandler(async (req, res) => {
         )
       );
     } else {
-
-        await Order.findByIdAndUpdate(orderId, {
+      await Order.findByIdAndUpdate(orderId, {
         "paymentDetails.status": "failed",
       });
 
-      throw new ApiError(400, paymentResponse.message || "Payment initiation failed");
+      throw new ApiError(
+        400,
+        paymentResponse.message || "Payment initiation failed"
+      );
     }
   } catch (error) {
-
     await Order.findByIdAndUpdate(orderId, {
       "paymentDetails.status": "failed",
     });
-    
+
     throw new ApiError(500, `Payment initiation failed: ${error.message}`);
   }
 });
@@ -106,14 +109,19 @@ const handlePaymentCallback = asyncHandler(async (req, res) => {
     }
 
     if (paymentStatus.success && paymentStatus.data.state === "COMPLETED") {
-
-        await Order.findByIdAndUpdate(order._id, {
+      await Order.findByIdAndUpdate(order._id, {
         "paymentDetails.status": "completed",
         "paymentDetails.gatewayPaymentId": paymentStatus.data.transactionId,
         "paymentDetails.paidAt": new Date(),
         status: "confirmed",
         confirmedAt: new Date(),
       });
+
+      try {
+        await sendPaymentSuccessEmail(order);
+      } catch (error) {
+        console.error("Failed to send payment success email:", error);
+      }
 
       return res.status(200).json(
         new ApiResponse(
@@ -127,8 +135,7 @@ const handlePaymentCallback = asyncHandler(async (req, res) => {
         )
       );
     } else {
-
-        await Order.findByIdAndUpdate(order._id, {
+      await Order.findByIdAndUpdate(order._id, {
         "paymentDetails.status": "failed",
       });
 

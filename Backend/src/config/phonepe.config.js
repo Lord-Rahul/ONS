@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import "dotenv/config"
 
 export const PHONEPE_CONFIG = {
   MERCHANT_ID: process.env.PHONEPE_MERCHANT_ID,

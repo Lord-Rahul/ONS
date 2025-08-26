@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import "dotenv/config"
 
 export const RAZORPAY_CONFIG = {
   KEY_ID: process.env.RAZORPAY_KEY_ID,

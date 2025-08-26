@@ -53,6 +53,8 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while registering the user ");
   }
 
+  await sendWelcomeEmail(createdUser);
+
   return res
     .status(201)
     .json(new ApiResponse(200, createdUser, "user is registered sucessfully "));
@@ -147,9 +149,9 @@ const changeUserPassword = asyncHandler(async (req, res) => {
 });
 
 const update = asyncHandler(async (req, res) => {
-
-    const body = req.body || {};
-  const { fullName, email, number, address1, address2, city, pincode, state } =body;
+  const body = req.body || {};
+  const { fullName, email, number, address1, address2, city, pincode, state } =
+    body;
 
   if (
     !fullName &&

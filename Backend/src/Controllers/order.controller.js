@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { Cart } from "../models/cart.model.js";
 import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
+import { sendOrderConfirmationEmail } from "../services/email.service.js";
 
 const placeOrder = asyncHandler(async (req, res) => {
   const { shippingAddress, paymentMethod = "PhonePe" } = req.body;
@@ -109,6 +110,7 @@ const placeOrder = asyncHandler(async (req, res) => {
   await cart.save();
 
   await order.populate("user", "fullName email phone ");
+  await sendOrderConfirmationEmail(order)
 
   return res
     .status(201)
