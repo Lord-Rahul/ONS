@@ -35,6 +35,7 @@ import productRoutes from "./routes/product.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import paymentsRoutes from "./routes/payments.routes.js";
 
 app.use(`${api}/users`, userRoutes);
 app.use(`${api}/category`, categoryRoutes);
@@ -43,5 +44,6 @@ app.use(`${api}/upload`, uploadRoutes);
 app.use(`${api}/cart`, cartRoutes);
 app.use(`${api}/orders`, orderRouter);
 app.use(`${api}/payments`, paymentRoutes);
+app.use(`${api}/payments`, paymentsRoutes);
 
 export { app };

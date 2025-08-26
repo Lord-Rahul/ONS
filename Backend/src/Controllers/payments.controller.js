@@ -3,9 +3,11 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { Order } from "../models/order.model.js";
 import {
-  createPhonePePayment,
-  verifyPhonePePayment,
-} from "../utils/phonepe.utils.js";
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  getRazorpayPayment,
+} from "../utils/razorpay.utils.js";
+import { RAZORPAY_CONFIG } from "../config/razorpay.config.js";
 import mongoose from "mongoose";
 
 const initiatePayment = asyncHandler(async (req, res) => {
@@ -30,31 +32,23 @@ const initiatePayment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Payment already completed for this order");
   }
 
-  const phoneNumber = order.shippingAddress.phone;
-
-  if (!phoneNumber || !/^[6-9]\d{9}$/.test(phoneNumber.toString())) {
-    throw new ApiError(
-      400,
-      "Valid 10-digit mobile number is required for payment"
-    );
-  }
-
   const transactionId = `TXN_${order.orderNumber}_${Date.now()}`;
 
   const paymentData = {
-    transactionId,
-    userId: userId.toString(),
     amount: order.totalAmount,
-    mobileNumber: phoneNumber,
+    transactionId,
+    orderId: order._id,
+    userId: userId.toString(),
   };
 
   try {
-    const paymentResponse = await createPhonePePayment(paymentData);
+    const razorpayOrder = await createRazorpayOrder(paymentData);
 
-    if (paymentResponse.success) {
+    if (razorpayOrder.success) {
+      // Update order with Razorpay order details
       await Order.findByIdAndUpdate(orderId, {
         "paymentDetails.transactionId": transactionId,
-        "paymentDetails.gatewayOrderId": paymentResponse.data.merchantTransactionId,
+        "paymentDetails.gatewayOrderId": razorpayOrder.data.id,
         "paymentDetails.status": "processing",
       });
 
@@ -62,23 +56,26 @@ const initiatePayment = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           {
-            paymentUrl: paymentResponse.data.instrumentResponse.redirectInfo.url,
+            razorpayOrderId: razorpayOrder.data.id,
+            amount: razorpayOrder.data.amount,
+            currency: razorpayOrder.data.currency,
+            keyId: RAZORPAY_CONFIG.KEY_ID,
+            orderId: order._id,
+            orderNumber: order.orderNumber,
             transactionId,
-            orderId,
+            customerDetails: {
+              name: order.shippingAddress.fullName,
+              email: order.shippingAddress.email,
+              phone: order.shippingAddress.phone,
+            }
           },
           "Payment initiated successfully"
         )
       );
     } else {
-
-        await Order.findByIdAndUpdate(orderId, {
-        "paymentDetails.status": "failed",
-      });
-
-      throw new ApiError(400, paymentResponse.message || "Payment initiation failed");
+      throw new ApiError(400, "Payment initiation failed");
     }
   } catch (error) {
-
     await Order.findByIdAndUpdate(orderId, {
       "paymentDetails.status": "failed",
     });
@@ -87,29 +84,48 @@ const initiatePayment = asyncHandler(async (req, res) => {
   }
 });
 
-const handlePaymentCallback = asyncHandler(async (req, res) => {
-  const { transactionId } = req.body;
+const verifyPayment = asyncHandler(async (req, res) => {
+  const { 
+    razorpay_order_id, 
+    razorpay_payment_id, 
+    razorpay_signature,
+    orderId 
+  } = req.body;
 
-  if (!transactionId) {
-    throw new ApiError(400, "Transaction ID is required");
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+    throw new ApiError(400, "Missing required payment verification data");
   }
 
   try {
-    const paymentStatus = await verifyPhonePePayment(transactionId);
+    // Verify payment signature
+    const isValidSignature = verifyRazorpayPayment({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
 
+    if (!isValidSignature) {
+      throw new ApiError(400, "Invalid payment signature");
+    }
+
+    // Get payment details from Razorpay
+    const paymentDetails = await getRazorpayPayment(razorpay_payment_id);
+
+    // Find and update order
     const order = await Order.findOne({
-      "paymentDetails.transactionId": transactionId,
+      _id: orderId,
+      "paymentDetails.gatewayOrderId": razorpay_order_id,
     });
 
     if (!order) {
-      throw new ApiError(404, "Order not found for this transaction");
+      throw new ApiError(404, "Order not found");
     }
 
-    if (paymentStatus.success && paymentStatus.data.state === "COMPLETED") {
-
-        await Order.findByIdAndUpdate(order._id, {
+    if (paymentDetails.status === "captured") {
+      // Payment successful
+      await Order.findByIdAndUpdate(order._id, {
         "paymentDetails.status": "completed",
-        "paymentDetails.gatewayPaymentId": paymentStatus.data.transactionId,
+        "paymentDetails.gatewayPaymentId": razorpay_payment_id,
         "paymentDetails.paidAt": new Date(),
         status: "confirmed",
         confirmedAt: new Date(),
@@ -121,27 +137,19 @@ const handlePaymentCallback = asyncHandler(async (req, res) => {
           {
             orderId: order._id,
             orderNumber: order.orderNumber,
+            paymentId: razorpay_payment_id,
             paymentStatus: "completed",
           },
-          "Payment completed successfully"
+          "Payment verified successfully"
         )
       );
     } else {
-
-        await Order.findByIdAndUpdate(order._id, {
+      // Payment failed
+      await Order.findByIdAndUpdate(order._id, {
         "paymentDetails.status": "failed",
       });
 
-      return res.status(400).json(
-        new ApiResponse(
-          400,
-          {
-            orderId: order._id,
-            paymentStatus: "failed",
-          },
-          "Payment failed"
-        )
-      );
+      throw new ApiError(400, "Payment verification failed");
     }
   } catch (error) {
     throw new ApiError(500, `Payment verification failed: ${error.message}`);
@@ -176,4 +184,4 @@ const getPaymentStatus = asyncHandler(async (req, res) => {
   );
 });
 
-export { initiatePayment, getPaymentStatus, handlePaymentCallback };
+export { initiatePayment, verifyPayment, getPaymentStatus };
