@@ -1,6 +1,6 @@
 import api from "./api.js";
 
-class placeOrder {
+class OrderService {
   async placeOrder(orderData) {
     try {
       const response = await api.post("/orders/place", orderData);
@@ -30,7 +30,7 @@ class placeOrder {
 
   async cancelOrderRequest(orderId) {
     try {
-      const response = await api.get(`/orders/${orderId}/cancel-request`);
+      const response = await api.put(`/orders/${orderId}/cancel-request`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
