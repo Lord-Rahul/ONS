@@ -2,11 +2,11 @@ import React, { useContext, useReducer, useEffect, createContext } from "react";
 import cartService from "../services/cartService.js";
 import { useAuth } from "./authContext.js";
 
-const cartContext = createContext();
+const CartContext = createContext();
 
 const CART_ACTIONS = {
   LOAD_CART_START: "LOAD_CART_START",
-  LOAD_CART_SUCESS: "LOAD_CART_SUCESS",
+  LOAD_CART_SUCCESS: "LOAD_CART_SUCCESS",
   LOAD_CART_ERROR: "LOAD_CART_ERROR",
   ADD_TO_CART: "ADD_TO_CART",
   UPDATE_CART_ITEM: "UPDATE_CART_ITEM",
@@ -32,7 +32,7 @@ const cartReducer = (state, action) => {
         error: null,
       };
 
-    case CART_ACTIONS.LOAD_CART_SUCESS:
+    case CART_ACTIONS.LOAD_CART_SUCCESS:
       const items = action.payload || [];
       return {
         ...state,
@@ -58,9 +58,9 @@ const cartReducer = (state, action) => {
       };
 
     case CART_ACTIONS.UPDATE_CART_ITEM:
-      const updatedItems = state.items.map((item) => {
-        item.id === action.payload.id ? action.payload : item;
-      });
+      const updatedItems = state.items.map((item) =>
+        item.id === action.payload.id ? action.payload : item
+      );
       return {
         ...state,
         items: updatedItems,
@@ -69,7 +69,7 @@ const cartReducer = (state, action) => {
 
     case CART_ACTIONS.REMOVE_FROM_CART:
       const filteredItems = state.items.filter(
-        (item) => item.id != action.payload
+        (item) => item.id !== action.payload
       );
       return {
         ...state,
@@ -100,3 +100,105 @@ const cartReducer = (state, action) => {
 const calculateTotal = (items) => {
   return items.reduce((total, item) => total + item.price * item.quantity, 0);
 };
+
+export const CartProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadCart();
+    }
+  }, [isAuthenticated]);
+
+  const loadCart = async () => {
+    try {
+      dispatch({ type: CART_ACTIONS.LOAD_CART_START });
+      const response = await cartService.getCart();
+      dispatch({
+        type: CART_ACTIONS.LOAD_CART_SUCCESS,
+        payload: response.data?.items || [],
+      });
+    } catch (error) {
+      dispatch({
+        type: CART_ACTIONS.LOAD_CART_ERROR,
+        payload: error.message || "Failed to load Cart",
+      });
+    }
+  };
+
+  const addToCart = async (productData) => {
+    try {
+      const response = await cartService.addToCart(productData);
+      dispatch({
+        type: CART_ACTIONS.ADD_TO_CART,
+        payload: response.data,
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateCartItem = async (itemId, updateData) => {
+    try {
+      const response = await cartService.updateCartItem(itemId, updateData);
+      dispatch({
+        type: CART_ACTIONS.UPDATE_CART_ITEM,
+        payload: response.data,
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const removeFromCart = async (itemId) => {
+    try {
+      await cartService.removeFromCart(itemId);
+      dispatch({
+        type: CART_ACTIONS.REMOVE_FROM_CART,
+        payload: itemId,
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      await cartService.clearCart();
+      dispatch({
+        type: CART_ACTIONS.CLEAR_CART,
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getCartCount = async () => {
+    try {
+      const count = await cartService.getCartCount();
+      dispatch({
+        type: CART_ACTIONS.SET_CART_COUNT,
+        payload: count,
+      });
+      return count;
+    } catch (error) {
+      return 0;
+    }
+  };
+
+  const value = {
+    ...state,
+    loadCart,
+    addToCart,
+    updateCartItem,
+    removeFromCart,
+    clearCart,
+    getCartCount,
+  };
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+};
+export default CartContext;
