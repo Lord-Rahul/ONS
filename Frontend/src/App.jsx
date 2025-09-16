@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import AppRoutes from "./routes/AppRoutes.jsx";
-import { AuthProvider } from "./context/authContext.js";
-import { CartProvider } from "./context/cartContext.js";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import { CartProvider } from "./context/CartContext.jsx";
 
 function App() {
   return (

@@ -1,6 +1,6 @@
 import React, { useContext, useReducer, useEffect, createContext } from "react";
 import cartService from "../services/cartService.js";
-import { useAuth } from "./authContext.js";
+import { useAuth } from "./AuthContext.jsx";
 
 const CartContext = createContext();
 
@@ -201,6 +201,6 @@ export const CartProvider = ({ children }) => {
     getCartCount,
   };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (<CartContext.Provider value={value}>{children}</CartContext.Provider>)
 };
 export default CartContext;
