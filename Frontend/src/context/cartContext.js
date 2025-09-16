@@ -39,6 +39,8 @@ const cartReducer = (state, action) => {
         items,
         count: items.length,
         total: calculateTotal(items),
+        loading: false,
+        error: null,
       };
 
     case CART_ACTIONS.LOAD_CART_ERROR:
