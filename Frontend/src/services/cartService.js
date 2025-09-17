@@ -10,18 +10,23 @@ class CartService {
     }
   }
 
-  async addToCart(productData) {
+  async addToCart(productId, quantity = 1, size = null, color = null) {
     try {
-      const response = await api.post("/cart/add", productData);
+      const response = await api.post("/cart/add", {
+        productId,
+        quantity,
+        size,
+        color,
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   }
 
-  async updateCartItem(itemId, updateData) {
+  async updateCartItem(itemId, quantity) {
     try {
-      const response = await api.put(`/cart/item/${itemId}`, updateData);
+      const response = await api.put(`/cart/item/${itemId}`, {quantity});
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
