@@ -7,6 +7,7 @@ import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
 import { sendOrderConfirmationEmail } from "../services/email.service.js";
 
+
 const placeOrder = asyncHandler(async (req, res) => {
   const { shippingAddress, paymentMethod = "PhonePe" } = req.body;
 

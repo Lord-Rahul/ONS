@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { response } from "express";
+import { sendWelcomeEmail } from "../services/email.service.js";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
