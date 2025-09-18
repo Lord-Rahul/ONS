@@ -1,13 +1,12 @@
 import React from "react";
-
-import TestConnection from "../components/TestConnection.jsx";
+import { Hero, CategoryGrid, FeaturedProducts } from "../components/index.js";
 
 const Home = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div>
-        <TestConnection />
-      </div>
+      <Hero />
+      <CategoryGrid />
+      <FeaturedProducts />
     </div>
   );
 };

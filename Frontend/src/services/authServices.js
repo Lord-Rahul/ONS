@@ -3,10 +3,12 @@ import api from "./api.js";
 class AuthService {
   async login(credentials) {
     try {
-      const response = await api.post("/login", credentials);
-      const { token, user } = response.data.data;
+      // Fix: Add /users prefix to match backend route
+      const response = await api.post("/users/login", credentials);
+      const { accessToken, user } = response.data.data;
 
-      localStorage.setItem("authToken", token);
+      // Store token and user data
+      localStorage.setItem("authToken", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
       return response.data;
@@ -17,7 +19,8 @@ class AuthService {
 
   async register(userData) {
     try {
-      const response = await api.post("/register", userData);
+      // Fix: Add /users prefix
+      const response = await api.post("/users/register", userData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -26,7 +29,8 @@ class AuthService {
 
   async logout() {
     try {
-      const response = await api.post("/logout");
+      // Fix: Add /users prefix
+      const response = await api.post("/users/logout");
       localStorage.removeItem("authToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
@@ -41,8 +45,6 @@ class AuthService {
     }
   }
 
-  
-
   isAuthenticated() {
     const token = localStorage.getItem("authToken");
     return !!token;
@@ -54,7 +56,8 @@ class AuthService {
 
   async updateProfile(userData) {
     try {
-      const response = await api.put("/update", userData);
+      // Fix: Add /users prefix
+      const response = await api.put("/users/update", userData);
 
       if (response.data.success && response.data.data) {
         localStorage.setItem("user", JSON.stringify(response.data.data));
@@ -68,7 +71,8 @@ class AuthService {
 
   async changePassword(passwordData) {
     try {
-      const response = await api.post("/changepassword", passwordData);
+      // Fix: Add /users prefix
+      const response = await api.post("/users/changepassword", passwordData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
