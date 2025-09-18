@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      const user = authService.getCurrentUser();
+      const user = authService.getUser();
       const isAuthenticated = authService.isAuthenticated();
 
       if (isAuthenticated && user) {
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
         type: AUTH_ACTIONS.LOGIN_START,
       });
       const response = await authService.login(Credential);
-      const user = authService.getCurrentUser();
+      const user = authService.getUser();
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }) => {
   const updateUser = async (userData) => {
     try {
       const response = await authService.updateProfile(userData);
-      const updatedUser = authService.getCurrentUser();
+      const updatedUser = authService.getUser();
 
       dispatch({
         type: AUTH_ACTIONS.UPDATE_USER,

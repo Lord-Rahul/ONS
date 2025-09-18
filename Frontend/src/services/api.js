@@ -30,13 +30,19 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+
       localStorage.removeItem("user");
 
-      window.location.href = "/login";
+      if (
+        window.location.pathname !== "/login" &&
+        window.location.pathname !== "/register"
+      ) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }
 );
 
-
-export default api
+export default api;

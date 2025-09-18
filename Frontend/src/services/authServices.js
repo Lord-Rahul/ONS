@@ -3,7 +3,7 @@ import api from "./api.js";
 class AuthService {
   async login(credentials) {
     try {
-      const response = await api.post("/users/login", credentials);
+      const response = await api.post("/login", credentials);
       const { token, user } = response.data.data;
 
       localStorage.setItem("authToken", token);
@@ -17,23 +17,31 @@ class AuthService {
 
   async register(userData) {
     try {
-      const response = await api.post("/users/register", userData);
+      const response = await api.post("/register", userData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   }
 
-  logout() {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
-    window.location.href = "/";
+  async logout() {
+    try {
+      const response = await api.post("/logout");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+
+      window.location.href = "/";
+      return response.data;
+    } catch (error) {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      throw error;
+    }
   }
 
-  getCurrentUser() {
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
-  }
+  
 
   isAuthenticated() {
     const token = localStorage.getItem("authToken");
@@ -46,14 +54,41 @@ class AuthService {
 
   async updateProfile(userData) {
     try {
-      const response = await api.put("/users/profile", userData);
-      const updatedUser = response.data.data;
+      const response = await api.put("/update", userData);
 
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      if (response.data.success && response.data.data) {
+        localStorage.setItem("user", JSON.stringify(response.data.data));
+      }
+
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
+  }
+
+  async changePassword(passwordData) {
+    try {
+      const response = await api.post("/changepassword", passwordData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  getUser() {
+    try {
+      const userData = localStorage.getItem("user");
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      return null;
+    }
+  }
+
+  clearAuthData() {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
   }
 }
 
