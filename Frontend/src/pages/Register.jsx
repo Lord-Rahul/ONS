@@ -14,6 +14,7 @@ const Register = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // New state for terms agreement
   
   const navigate = useNavigate();
 
@@ -23,6 +24,11 @@ const Register = () => {
       ...prev,
       [name]: value
     }));
+    if (error) setError("");
+  };
+
+  const handleTermsChange = (e) => {
+    setAgreedToTerms(e.target.checked);
     if (error) setError("");
   };
 
@@ -74,12 +80,24 @@ const Register = () => {
       return false;
     }
 
+    // Terms and conditions validation
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms & Conditions and Privacy Policy to create an account");
+      return false;
+    }
+
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Double check terms agreement before submission
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms & Conditions and Privacy Policy to create an account");
+      return;
+    }
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -90,7 +108,7 @@ const Register = () => {
         fullName: formData.fullName.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
-        number: formData.phone.replace(/\D/g, '') // Changed from 'phone' to 'number' to match backend
+        number: formData.phone.replace(/\D/g, '') // Backend expects 'number', not 'phone'
       };
 
       console.log("Attempting registration with:", { ...registrationData, password: "[HIDDEN]" });
@@ -362,34 +380,51 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Terms & Conditions */}
+            {/* Terms & Conditions - Enhanced */}
             <div className="flex items-start">
               <input
                 id="terms"
                 name="terms"
                 type="checkbox"
                 required
+                checked={agreedToTerms}
+                onChange={handleTermsChange}
                 className="h-4 w-4 text-black focus:ring-black border-gray-300 mt-1 rounded"
                 disabled={loading}
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-700 font-light">
                 I agree to the{' '}
-                <Link to="/terms" className="text-black hover:text-gray-800 underline" target="_blank">
+                <Link 
+                  to="/terms" 
+                  className="text-black hover:text-gray-800 underline" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Terms & Conditions
                 </Link>
                 {' '}and{' '}
-                <Link to="/privacy" className="text-black hover:text-gray-800 underline" target="_blank">
+                <Link 
+                  to="/privacy" 
+                  className="text-black hover:text-gray-800 underline" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Privacy Policy
                 </Link>
+                {' '}<span className="text-red-500">*</span>
               </label>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button - Disabled when terms not agreed */}
             <div>
               <button
                 type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-light tracking-[0.1em] uppercase text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 rounded-none"
+                disabled={loading || !agreedToTerms}
+                className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-light tracking-[0.1em] uppercase text-white transition-all duration-300 rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black ${
+                  loading || !agreedToTerms
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-black hover:bg-gray-800'
+                }`}
               >
                 {loading ? (
                   <div className="flex items-center">
@@ -401,14 +436,28 @@ const Register = () => {
                   </div>
                 ) : (
                   <span className="flex items-center">
-                    Create Account
-                    <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                    </svg>
+                    {!agreedToTerms ? 'Agree to Terms to Continue' : 'Create Account'}
+                    {agreedToTerms && (
+                      <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </span>
                 )}
               </button>
             </div>
+
+            {/* Additional Terms Reminder */}
+            {!agreedToTerms && (
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 text-sm font-light rounded">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  Please read and accept our Terms & Conditions and Privacy Policy to create your account.
+                </div>
+              </div>
+            )}
 
             {/* Login Link */}
             <div className="text-center">
