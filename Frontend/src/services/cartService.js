@@ -10,23 +10,42 @@ class CartService {
     }
   }
 
-  async addToCart(productId, quantity = 1, size = null, color = null) {
+  
+  async addToCart(productData, quantity = 1, size = null, color = null) {
     try {
-      const response = await api.post("/cart/add", {
-        productId,
-        quantity,
-        size,
-        color,
-      });
+      let requestData;
+
+     
+      if (typeof productData === "object" && productData.productId) {
+        requestData = {
+          productId: productData.productId,
+          quantity: productData.quantity || 1,
+          size: productData.size || null,
+          color: productData.color || null,
+        };
+      } else {
+      
+        requestData = {
+          productId: productData,
+          quantity,
+          size,
+          color,
+        };
+      }
+
+      console.log("🔍 Sending cart data:", requestData);// Debug log
+
+      const response = await api.post("/cart/add", requestData);
       return response.data;
     } catch (error) {
+  
       throw error.response?.data || error;
     }
   }
 
   async updateCartItem(itemId, quantity) {
     try {
-      const response = await api.put(`/cart/item/${itemId}`, {quantity});
+      const response = await api.put(`/cart/item/${itemId}`, { quantity });
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
