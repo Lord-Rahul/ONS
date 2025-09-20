@@ -1,69 +1,67 @@
 import React from "react";
-import useCart from "../hooks/useCart.js";
-import { useAuth } from "../context/AuthContext.jsx";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+import useCart from "../hooks/useCart.js";
+import useCartUI from "../hooks/useCartUI.js";
+import useCartActions from "../hooks/useCartActions.js";
+import CartItem from "../components/cart/CartItem.jsx";
+import OrderSummary from "../components/orderSummary.jsx";
+import ErrorMessage from "../components/cart/ErrorMessage.jsx";
+
 
 const Cart = () => {
-  const { items, loading, removeFromCart, updateCartItem, clearCart, total } =
-    useCart();
+  const { items, loading } = useCart();
   const { isAuthenticated } = useAuth();
 
-  // Add error boundary
-  const [error, setError] = React.useState(null);
+  // Custom hooks for state management
+  const uiState = useCartUI(items);
+  const actions = useCartActions(uiState);
 
-  React.useEffect(() => {
-    // Clear any previous errors when component mounts
-    setError(null);
-  }, []);
+  const {
+    error,
+    totals,
+    clearError,
+    isItemUpdating,
+    isItemRemoving,
+    getItemQuantity,
+  } = uiState;
 
-  const handleUpdateQuantity = async (itemId, newQuantity) => {
-    try {
-      setError(null);
-      if (newQuantity <= 0) {
-        await removeFromCart(itemId);
-      } else {
-        await updateCartItem(itemId, newQuantity);
-      }
-    } catch (error) {
-      console.error("Error updating cart:", error);
-      setError("Failed to update cart item");
-    }
-  };
+  const { handleUpdateQuantity, handleRemoveItem, handleClearCart } = actions;
 
-  const handleRemoveItem = async (itemId) => {
-    try {
-      setError(null);
-      await removeFromCart(itemId);
-    } catch (error) {
-      console.error("Error removing item:", error);
-      setError("Failed to remove item from cart");
-    }
-  };
-
-  // Add error display
-  if (error) {
+  // Loading state
+  if (loading) {
     return (
       <div className="min-h-screen pt-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <h2 className="text-2xl font-light text-red-600 mb-4">Error</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <button
-              onClick={() => setError(null)}
-              className="bg-black text-white px-6 py-3 font-light tracking-wide hover:bg-gray-800 transition-colors"
-            >
-              Try Again
-            </button>
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+            <span className="ml-4 text-gray-600">Loading your cart...</span>
           </div>
         </div>
       </div>
     );
   }
 
+  // Authentication check
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
+          <div className="mb-6">
+            <svg
+              className="w-16 h-16 mx-auto text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M16 11V7a4 4 0 00-8 0v4M8 11h8l1 9H7l1-9z"
+              />
+            </svg>
+          </div>
           <h2 className="text-2xl font-light text-black mb-4">
             Please Sign In
           </h2>
@@ -81,19 +79,27 @@ const Cart = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black"></div>
-      </div>
-    );
-  }
-
+  // Empty cart
   if (!items || items.length === 0) {
     return (
       <div className="min-h-screen pt-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
+            <div className="mb-8">
+              <svg
+                className="w-24 h-24 mx-auto text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M16 11V7a4 4 0 00-8 0v4M8 11h8l1 9H7l1-9z"
+                />
+              </svg>
+            </div>
             <div className="w-24 h-px bg-black mx-auto mb-8"></div>
             <h1 className="text-4xl font-light text-black mb-6">Your Cart</h1>
             <p className="text-xl text-gray-600 mb-8">
@@ -127,103 +133,51 @@ const Cart = () => {
   return (
     <div className="min-h-screen pt-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="w-24 h-px bg-black mx-auto mb-8"></div>
-        <h1 className="text-4xl font-light text-black text-center mb-12">
-          Shopping Cart
-        </h1>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="w-24 h-px bg-black mx-auto mb-8"></div>
+          <h1 className="text-4xl font-light text-black mb-4">Shopping Cart</h1>
+          <p className="text-gray-600">
+            {totals.itemCount}{" "}
+            {totals.itemCount === 1 ? "item" : "items"} in your cart
+          </p>
+        </div>
+
+        {/* Error Message */}
+        <ErrorMessage error={error} onDismiss={clearError} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-6">
-            {items.map((item) => (
-              <div
-                key={item._id}
-                className="bg-white p-6 shadow-sm border border-gray-200"
+            {/* Clear Cart Button */}
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-sm text-gray-600">
+                {totals.itemCount} items
+              </span>
+              <button
+                onClick={handleClearCart}
+                className="text-sm text-red-600 hover:text-red-800 underline"
               >
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={
-                      item.product?.mainImage?.url ||
-                      item.product?.images?.[0]?.url ||
-                      item.product?.image ||
-                      "/placeholder.jpg"
-                    }
-                    alt={item.product?.name || "Product"}
-                    className="w-20 h-20 object-cover"
-                    onError={(e) => {
-                      e.target.src = "/placeholder.jpg";
-                    }}
-                  />
-                  <div className="flex-1">
-                    <h3 className="text-lg font-light text-black">
-                      {item.product?.name || "Unknown Product"}
-                    </h3>
-                    <p className="text-gray-600">
-                      ₹{item.product?.price?.toLocaleString() || "0"}
-                    </p>
-                    {item.size && (
-                      <p className="text-sm text-gray-500">Size: {item.size}</p>
-                    )}
-                    {item.color && (
-                      <p className="text-sm text-gray-500">Color: {item.color}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={() =>
-                        handleUpdateQuantity(item._id, item.quantity - 1)
-                      }
-                      className="w-8 h-8 border border-gray-300 flex items-center justify-center hover:bg-gray-50"
-                    >
-                      -
-                    </button>
-                    <span className="w-12 text-center">{item.quantity}</span>
-                    <button
-                      onClick={() =>
-                        handleUpdateQuantity(item._id, item.quantity + 1)
-                      }
-                      className="w-8 h-8 border border-gray-300 flex items-center justify-center hover:bg-gray-50"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveItem(item._id)}
-                    className="text-red-600 hover:text-red-800 ml-4"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
+                Clear Cart
+              </button>
+            </div>
+
+            {/* Cart Items List */}
+            {items.map((item) => (
+              <CartItem
+                key={item._id}
+                item={item}
+                isUpdating={isItemUpdating(item._id)}
+                isRemoving={isItemRemoving(item._id)}
+                currentQuantity={getItemQuantity(item._id, item.quantity)}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemove={handleRemoveItem}
+              />
             ))}
           </div>
 
           {/* Order Summary */}
-          <div className="bg-white p-6 shadow-sm border border-gray-200 h-fit">
-            <h3 className="text-xl font-light text-black mb-6">
-              Order Summary
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>₹{total.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Shipping</span>
-                <span>Free</span>
-              </div>
-              <div className="border-t pt-4 flex justify-between font-medium">
-                <span>Total</span>
-                <span>₹{total.toLocaleString()}</span>
-              </div>
-            </div>
-            <Link
-              to="/checkout"
-              className="w-full bg-black text-white py-3 px-6 text-center block mt-6 font-light tracking-wide hover:bg-gray-800 transition-colors"
-            >
-              Proceed to Checkout
-            </Link>
-          </div>
+          <OrderSummary totals={totals} />
         </div>
       </div>
     </div>
