@@ -1,117 +1,134 @@
-import api from "./api.js";
+import api from './api.js';
 
 class OrderService {
+  // Place a new order
   async placeOrder(orderData) {
     try {
-      const response = await api.post("/orders/place", orderData);
-      return response.data;
+      console.log('📦 OrderService: Placing order with data:', orderData);
+      
+      // ✅ FIX: Use /orders/place endpoint
+      const response = await api.post('/orders/place', orderData);
+      console.log('✅ OrderService: Order placed successfully:', response.data);
+      
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Order placed successfully'
+      };
     } catch (error) {
-      throw error.response?.data || error;
+      console.error('❌ OrderService: Place order error:', error);
+      
+      // Better error handling - extract actual error message
+      let errorMessage = 'Failed to place order';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data) {
+        // Sometimes the error is in the response data directly
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      return {
+        success: false,
+        error: errorMessage,
+        message: errorMessage
+      };
     }
   }
 
+  // Get user orders
   async getUserOrders(page = 1, limit = 10) {
     try {
-      const response = await api.get("/orders", {
-        params: { page, limit },
-      });
-      return response.data;
+      console.log('📋 OrderService: Fetching user orders');
+      
+      const response = await api.get(`/orders?page=${page}&limit=${limit}`);
+      console.log('✅ OrderService: Orders fetched successfully');
+      
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Orders fetched successfully'
+      };
     } catch (error) {
-      throw error.response?.data || error;
+      console.error('❌ OrderService: Get orders error:', error);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to fetch orders';
+      
+      return {
+        success: false,
+        error: errorMessage,
+        message: errorMessage
+      };
     }
   }
 
+  // Get order by ID
   async getOrderById(orderId) {
     try {
+      console.log('🔍 OrderService: Fetching order:', orderId);
+      
       const response = await api.get(`/orders/${orderId}`);
-      return response.data;
+      console.log('✅ OrderService: Order fetched successfully');
+      
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Order fetched successfully'
+      };
     } catch (error) {
-      throw error.response?.data || error;
+      console.error('❌ OrderService: Get order error:', error);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to fetch order';
+      
+      return {
+        success: false,
+        error: errorMessage,
+        message: errorMessage
+      };
     }
   }
 
-  async cancelOrderRequest(orderId, reason = "") {
+  // Cancel order
+  async cancelOrder(orderId, reason) {
     try {
+      console.log('❌ OrderService: Cancelling order:', orderId);
+      
       const response = await api.put(`/orders/${orderId}/cancel-request`, {
-        reason,
+        reason
       });
-      return response.data;
+      
+      console.log('✅ OrderService: Order cancellation requested');
+      
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message || 'Order cancellation requested'
+      };
     } catch (error) {
-      throw error.response?.data || error;
+      console.error('❌ OrderService: Cancel order error:', error);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to request order cancellation';
+      
+      return {
+        success: false,
+        error: errorMessage,
+        message: errorMessage
+      };
     }
-  }
-
-  async initiatePayment(orderId, paymentMethod = "razorpay") {
-    try {
-      const response = await api.post(`/payments/initiate/${orderId}`, {
-        paymentMethod,
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  }
-
-  async getPaymentStatus(orderId) {
-    try {
-      const response = await api.get(`/payments/status/${orderId}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  }
-
-  async verifyPayment(paymentData) {
-    try {
-      const response = await api.post(`/payments/verify`, paymentData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  }
-
-  getOrderSummary(cartItems, shippingCost = 0, taxRate = 0.18) {
-    const subtotal = cartItems.reduce((total, item) => {
-      return total + item.price * item.quantity;
-    }, 0);
-
-    const tax = subtotal * taxRate;
-    const total = subtotal + shippingCost + tax;
-
-    return {
-      subtotal,
-      shippingCost,
-      tax,
-      total,
-      itemCount: cartItems.length,
-    };
-  }
-
-  getOrderStatusText(status) {
-    const statusMap = {
-      pending: "Order Placed",
-      confirmed: "Confirmed",
-      processing: "Processing",
-      shipped: "Shipped",
-      delivered: "Delivered",
-      cancelled: "Cancelled",
-      returned: "Returned",
-    };
-    return statusMap[status] || status;
-  }
-
-  getOrderStatusColor(status) {
-    const colorMap = {
-      pending: "text-yellow-600",
-      confirmed: "text-blue-600",
-      processing: "text-purple-600",
-      shipped: "text-indigo-600",
-      delivered: "text-green-600",
-      cancelled: "text-red-600",
-      returned: "text-gray-600",
-    };
-    return colorMap[status] || "text-gray-600";
   }
 }
 
-export default new OrderService();
+const orderService = new OrderService();
+export default orderService;

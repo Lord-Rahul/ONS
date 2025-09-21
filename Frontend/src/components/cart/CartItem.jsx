@@ -4,10 +4,28 @@ const CartItem = ({
   item, 
   isUpdating, 
   isRemoving, 
-  currentQuantity, 
   onUpdateQuantity, 
   onRemove 
 }) => {
+  // 🔥 Use actual item quantity directly from the cart item
+  const currentQuantity = item.quantity;
+
+  // 🔥 Add validation for item structure
+  if (!item || !item.product) {
+    console.warn('Invalid cart item:', item);
+    return (
+      <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+        <p className="text-red-700">Invalid item data</p>
+        <button 
+          onClick={() => onRemove(item._id)}
+          className="text-red-600 underline mt-2"
+        >
+          Remove from cart
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`bg-white p-6 shadow-sm border border-gray-200 rounded-lg transition-all duration-300 ${
@@ -61,7 +79,7 @@ const CartItem = ({
           <p className={`text-sm font-medium text-gray-900 mt-2 transition-opacity ${
             isUpdating ? 'opacity-50' : 'opacity-100'
           }`}>
-            {/*  Show current quantity during update, not the changing one */}
+            {/* v Show current quantity during update, not the changing one */}
             Subtotal: ₹{((item.product?.price || 0) * currentQuantity).toLocaleString()}
           </p>
           

@@ -22,8 +22,10 @@ class ProductService {
   async getProductById(id) {
     try {
       const response = await api.get(`/products/${id}`);
+      console.log('🔍 Product detail response:', response.data);
       return response.data;
     } catch (error) {
+      console.error('❌ ProductService getProductById error:', error);
       throw error.response?.data || error;
     }
   }

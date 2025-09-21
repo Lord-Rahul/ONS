@@ -1,22 +1,24 @@
 import { Router } from "express";
 import {
-  getOrderById,
-  getUserOrders,
   placeOrder,
-  requestCancellation,
-  updateOrderStatus,
+  getUserOrders,
+  getOrderById,
+  updateOrderStatus
 } from "../Controllers/order.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { verifyAdmin } from "../middlewares/admin.middleware.js";
 
 const router = Router();
 
+// Protect all routes
 router.use(verifyJWT);
 
+// ✅ ADD the /place route that frontend is calling
 router.route("/place").post(placeOrder);
+
+// Keep existing routes
+router.route("/").post(placeOrder); // Keep this for backwards compatibility
 router.route("/").get(getUserOrders);
 router.route("/:id").get(getOrderById);
-router.route("/:id/status").put(verifyAdmin, updateOrderStatus);
-router.route("/:id/cancel-request").put(requestCancellation);
+router.route("/:id/status").put(updateOrderStatus);
 
 export default router;

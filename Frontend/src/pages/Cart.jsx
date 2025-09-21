@@ -4,14 +4,16 @@ import { useAuth } from "../context/AuthContext.jsx";
 import useCart from "../hooks/useCart.js";
 import useCartUI from "../hooks/useCartUI.js";
 import useCartActions from "../hooks/useCartActions.js";
+import useToast from "../hooks/useToast.js";
 import CartItem from "../components/cart/CartItem.jsx";
 import OrderSummary from "../components/orderSummary.jsx";
 import ErrorMessage from "../components/cart/ErrorMessage.jsx";
-
+import ToastContainer from "../components/ToastContainer.jsx";
 
 const Cart = () => {
   const { items, loading } = useCart();
   const { isAuthenticated } = useAuth();
+  const { toasts, removeToast } = useToast();
 
   // Custom hooks for state management
   const uiState = useCartUI(items);
@@ -23,7 +25,6 @@ const Cart = () => {
     clearError,
     isItemUpdating,
     isItemRemoving,
-    getItemQuantity,
   } = uiState;
 
   const { handleUpdateQuantity, handleRemoveItem, handleClearCart } = actions;
@@ -132,6 +133,9 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen pt-20 bg-gray-50">
+      {/* 🔥 Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Header */}
         <div className="text-center mb-12">
@@ -169,7 +173,6 @@ const Cart = () => {
                 item={item}
                 isUpdating={isItemUpdating(item._id)}
                 isRemoving={isItemRemoving(item._id)}
-                currentQuantity={getItemQuantity(item._id, item.quantity)}
                 onUpdateQuantity={handleUpdateQuantity}
                 onRemove={handleRemoveItem}
               />

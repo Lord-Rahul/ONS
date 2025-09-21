@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import productService from "../services/productService.js";
 import useCart from "../hooks/useCart.js";
+import useToast from '../hooks/useToast.js';
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { addToCart } = useCart();
+  const { addToast } = useToast();
 
   useEffect(() => {
     fetchFeaturedProducts();
@@ -36,13 +38,18 @@ const FeaturedProducts = () => {
       await addToCart({
         productId: product._id,
         quantity: 1,
-        size: product.sizes?.[0]?.size || "M",
-        color: product.colors?.[0] || "Default",
+        size: 'M', // Default size
+        color: 'Default' // Default color
       });
-
-      console.log("Added to cart:", product.name);
+      
+      // Show success toast
+      addToast(`✅ ${product.name} added to cart!`, 'success', 3000);
+      
     } catch (error) {
-      console.error("Failed to add to cart:", error);
+      console.error('Error adding to cart:', error);
+      
+      // Show error toast
+      addToast('❌ Failed to add item to cart', 'error', 4000);
     }
   };
 

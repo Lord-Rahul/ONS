@@ -1,170 +1,180 @@
-import React, {
-  createContext,
-  useContext,
-  useReducer,
-  useEffect,
-} from "react";
-import authService from "../services/authServices.js";
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import authService from '../services/authServices.js';
 
 const AuthContext = createContext();
-
-const AUTH_ACTIONS = {
-  LOGIN_START: "LOGIN_START",
-  LOGIN_SUCCESS: "LOGIN_SUCCESS",
-  LOGIN_ERROR: "LOGIN_ERROR",
-  LOGOUT: "LOGOUT",
-  UPDATE_USER: "UPDATE_USER",
-};
 
 const initialState = {
   user: null,
   isAuthenticated: false,
-  loading: true,
-  error: null,
+  isLoading: true,
+  error: null
 };
 
 const authReducer = (state, action) => {
   switch (action.type) {
-    case AUTH_ACTIONS.LOGIN_START:
+    case 'SET_LOADING':
       return {
         ...state,
-        loading: true,
-        error: null,
+        isLoading: action.payload,
+        error: null
       };
-
-    case AUTH_ACTIONS.LOGIN_SUCCESS:
+      
+    case 'LOGIN_SUCCESS':
       return {
         ...state,
         user: action.payload,
         isAuthenticated: true,
-        loading: false,
-        error: null,
+        isLoading: false,
+        error: null
       };
-
-    case AUTH_ACTIONS.LOGIN_ERROR:
+      
+    case 'LOGOUT':
       return {
         ...state,
         user: null,
         isAuthenticated: false,
-        loading: false,
+        isLoading: false,
+        error: null
+      };
+      
+    case 'SET_ERROR':
+      return {
+        ...state,
         error: action.payload,
+        isLoading: false
       };
-
-    case AUTH_ACTIONS.LOGOUT:
+      
+    case 'CLEAR_ERROR':
       return {
         ...state,
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        error: null,
+        error: null
       };
-
-    case AUTH_ACTIONS.UPDATE_USER:
-      return {
-        ...state,
-        user: action.payload,
-      };
+      
     default:
       return state;
   }
 };
+
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  // Check authentication status on app load
   useEffect(() => {
-    const checkAuth = () => {
-      const user = authService.getUser();
-      const isAuthenticated = authService.isAuthenticated();
+    const checkAuth = async () => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        
+        // Check if user data exists in localStorage
+        const user = authService.getCurrentUser();
+        const token = localStorage.getItem('authToken');
+        
+        if (!user || !token) {
+          dispatch({ type: 'SET_LOADING', payload: false });
+          return;
+        }
 
-      if (isAuthenticated && user) {
-        dispatch({
-          type: AUTH_ACTIONS.LOGIN_SUCCESS,
-          payload: user,
-        });
-      } else {
-        dispatch({ type: AUTH_ACTIONS.LOGOUT });
+        // Simple validation - if both exist, assume authenticated
+        dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        
+      } catch (error) {
+        console.error('Auth check error:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to verify authentication' });
+        
+        // Clean up on error
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+        dispatch({ type: 'LOGOUT' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
     };
 
     checkAuth();
   }, []);
 
-  const login = async (Credential) => {
+  const login = async (credentials) => {
     try {
-      dispatch({
-        type: AUTH_ACTIONS.LOGIN_START,
-      });
-      const response = await authService.login(Credential);
-      const user = authService.getUser();
-
-      dispatch({
-        type: AUTH_ACTIONS.LOGIN_SUCCESS,
-        payload: user,
-      });
-
-      return response;
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+      
+      const response = await authService.login(credentials);
+      
+      if (response.success) {
+        dispatch({ type: 'LOGIN_SUCCESS', payload: response.data.user });
+        return response;
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
     } catch (error) {
-      dispatch({
-        type: AUTH_ACTIONS.LOGIN_ERROR,
-        payload: error.message || "Login Failed ",
-      });
-
+      const errorMessage = error.message || 'Login failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   const register = async (userData) => {
     try {
-      dispatch({ type: AUTH_ACTIONS.LOGIN_START });
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+      
       const response = await authService.register(userData);
-      return response;
+      
+      if (response.success) {
+        dispatch({ type: 'LOGIN_SUCCESS', payload: response.data.user });
+        return response;
+      } else {
+        throw new Error(response.message || 'Registration failed');
+      }
     } catch (error) {
-      dispatch({
-        type: AUTH_ACTIONS.LOGIN_ERROR,
-        payload: error.message || "registration failed",
-      });
+      const errorMessage = error.message || 'Registration failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    dispatch({ type: AUTH_ACTIONS.LOGOUT });
-  };
-
-  const updateUser = async (userData) => {
+  const logout = async () => {
     try {
-      const response = await authService.updateProfile(userData);
-      const updatedUser = authService.getUser();
-
-      dispatch({
-        type: AUTH_ACTIONS.UPDATE_USER,
-        payload: updatedUser,
-      });
-
-      return response;
+      dispatch({ type: 'SET_LOADING', payload: true });
+      await authService.logout();
     } catch (error) {
-      throw error;
+      console.error('Logout error:', error);
+    } finally {
+      dispatch({ type: 'LOGOUT' });
     }
+  };
+
+  const clearError = () => {
+    dispatch({ type: 'CLEAR_ERROR' });
   };
 
   const value = {
-    ...state,
+    user: state.user,
+    isAuthenticated: state.isAuthenticated,
+    isLoading: state.isLoading,
+    error: state.error,
     login,
     register,
     logout,
-    updateUser,
+    clearError
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be within an authProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-export default AuthContext;
+export { AuthContext };

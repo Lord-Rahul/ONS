@@ -9,28 +9,43 @@ import { sendOrderConfirmationEmail } from "../services/email.service.js";
 
 
 const placeOrder = asyncHandler(async (req, res) => {
-  const { shippingAddress, paymentMethod = "PhonePe" } = req.body;
-
+  const { items, shippingAddress, paymentMethod, totalAmount } = req.body;
   const userId = req.user._id;
 
-  if (
-    !shippingAddress ||
-    !shippingAddress.fullName ||
-    !shippingAddress.phone ||
-    !shippingAddress.address1 ||
-    !shippingAddress.city ||
-    !shippingAddress.state ||
-    !shippingAddress.pincode
-  ) {
-    throw new ApiError(400, "fill required fields ");
+  console.log('📦 Received order data:', { items, shippingAddress, paymentMethod, totalAmount });
+
+  // ✅ FIXED: Better validation with more specific error messages
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    throw new ApiError(400, "Order items are required");
   }
 
+  if (!shippingAddress) {
+    throw new ApiError(400, "Shipping address is required");
+  }
+
+  // Validate shipping address fields
+  const requiredAddressFields = ['fullName', 'email', 'phone', 'address', 'city', 'state', 'pincode'];
+  for (const field of requiredAddressFields) {
+    if (!shippingAddress[field] || shippingAddress[field].trim() === '') {
+      throw new ApiError(400, `${field} is required in shipping address`);
+    }
+  }
+
+  if (!paymentMethod) {
+    throw new ApiError(400, "Payment method is required");
+  }
+
+  if (!totalAmount || totalAmount <= 0) {
+    throw new ApiError(400, "Total amount is required and must be greater than 0");
+  }
+
+  // Get user's cart
   const cart = await Cart.findOne({ user: userId }).populate("items.product");
 
-  if (!cart || cart.items.length === 0) {
+  if (!cart || !cart.items || cart.items.length === 0) {
     throw new ApiError(
       400,
-      "Cart is empty. Add items to cart before placing order "
+      "Cart is empty. Add items to cart before placing order"
     );
   }
 
