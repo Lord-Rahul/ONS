@@ -228,15 +228,22 @@ orderSchema.pre("save", function (next) {
 });
 
 orderSchema.pre("save", function (next) {
-  this.itemsSubtotal = this.items.reduce(
-    (total, item) => total + item.itemSubtotal,
-    0
-  );
-  this.totalAmount =
-    this.itemsSubtotal +
-    this.shippingCharges +
-    this.taxAmount -
-    this.discountAmount;
+  if (
+    this.isModified("items") ||
+    this.isModified("shippingCharges") ||
+    this.isModified("taxAmount") ||
+    this.isModified("discountAmount")
+  ) {
+    this.itemsSubtotal = this.items.reduce(
+      (total, item) => total + item.itemSubtotal,
+      0
+    );
+    this.totalAmount =
+      this.itemsSubtotal +
+      this.shippingCharges +
+      this.taxAmount -
+      this.discountAmount;
+  }
   next();
 });
 

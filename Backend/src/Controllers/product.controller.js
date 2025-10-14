@@ -198,7 +198,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     );
 });
 
-const getProoductById = asyncHandler(async (req, res) => {
+const getProductById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -235,7 +235,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
   const imagesToDelete = [];
 
   if (product.mainImage && product.mainImage.publicId) {
-    imagesToDelete.push(product, mainImage.publicId);
+    imagesToDelete.push(product.mainImage.publicId);
   }
 
   if (product.additionalImages && product.additionalImages.publicId) {
@@ -246,13 +246,9 @@ const deleteProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  for (const publicId of imagesToDelete) {
-    try {
-      await deleteFromCloudinary(publicId);
-    } catch (error) {
-      onsole.log(`Failed to delete image ${publicId} from Cloudinary:`, error);
-    }
-  }
+  await Promise.allSettled(
+    imagesToDelete.map((publicId) => deleteFromCloudinary(publicId))
+  );
 
   await Product.findByIdAndDelete(id);
 
@@ -425,4 +421,10 @@ const updateProduct = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, updatedProduct, "Product updated successfully"));
 });
 
-export { addProduct, getAllProducts, getProoductById, updateProduct ,deleteProduct};
+export {
+  addProduct,
+  getAllProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+};

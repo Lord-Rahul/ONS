@@ -35,6 +35,10 @@ const cartSchema = mongoose.Schema(
       unique: true,
     },
     items: [cartItemSchema],
+    totalItems: {
+      type: Number,
+      default: 0,
+    },
     totalAmount: {
       type: Number,
       default: 0,
@@ -43,10 +47,16 @@ const cartSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-cartSchema.pre('save',function (next){
-    this.totalItems= this.items.reduce((total,item)=>total+item.quantity,0);
-    this.totalAmount=this.items.reduce((total,item)=>total+(item.priceAtTime*item.quantity),0);
-    next();
-})
+cartSchema.pre("save", function (next) {
+  this.totalItems = this.items.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
+  this.totalAmount = this.items.reduce(
+    (total, item) => total + item.priceAtTime * item.quantity,
+    0
+  );
+  next();
+});
 
 export const Cart = mongoose.model("Cart", cartSchema);

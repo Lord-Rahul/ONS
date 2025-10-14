@@ -6,6 +6,7 @@ import {
   createPhonePePayment,
   verifyPhonePePayment,
 } from "../utils/phonepe.utils.js";
+import { sendPaymentSuccessEmail } from "../services/email.service.js";
 import mongoose from "mongoose";
 
 const initiatePayment = asyncHandler(async (req, res) => {

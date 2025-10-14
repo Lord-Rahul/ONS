@@ -9,12 +9,11 @@ import { sendOrderConfirmationEmail } from "../services/email.service.js";
 
 
 const placeOrder = asyncHandler(async (req, res) => {
-  const { items, shippingAddress, paymentMethod, totalAmount } = req.body;
+  const { items, shippingAddress, paymentMethod } = req.body;
   const userId = req.user._id;
 
-  console.log('📦 Received order data:', { items, shippingAddress, paymentMethod, totalAmount });
+  console.log('📦 Received order data:', { items, shippingAddress, paymentMethod });
 
-  // ✅ FIXED: Better validation with more specific error messages
   if (!items || !Array.isArray(items) || items.length === 0) {
     throw new ApiError(400, "Order items are required");
   }
@@ -33,10 +32,6 @@ const placeOrder = asyncHandler(async (req, res) => {
 
   if (!paymentMethod) {
     throw new ApiError(400, "Payment method is required");
-  }
-
-  if (!totalAmount || totalAmount <= 0) {
-    throw new ApiError(400, "Total amount is required and must be greater than 0");
   }
 
   // Get user's cart

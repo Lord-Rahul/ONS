@@ -96,7 +96,7 @@ const deleteImage = asyncHandler(async (req, res) => {
   const result = await deleteFromCloudinary(publicId);
 
   if (result.result !== "ok" && result.result !== "not found") {
-    throw new ApiError("400, failed to delete image ");
+    throw new ApiError(400, "failed to delete image ");
   }
 
   return res
@@ -117,7 +117,7 @@ const deleteImageByUrl = asyncHandler(async (req, res) => {
     throw new ApiError(400, "image url is required");
   }
 
-  const publicId =  getPublicIdFromUrl(imageUrl);
+  const publicId = getPublicIdFromUrl(imageUrl);
   const result = await deleteFromCloudinary(publicId);
 
   if (result.result !== "ok" && result.result !== "not found") {

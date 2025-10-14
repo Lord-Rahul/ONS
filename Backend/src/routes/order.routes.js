@@ -3,7 +3,8 @@ import {
   placeOrder,
   getUserOrders,
   getOrderById,
-  updateOrderStatus
+  updateOrderStatus,
+  requestCancellation
 } from "../Controllers/order.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -20,5 +21,6 @@ router.route("/").post(placeOrder); // Keep this for backwards compatibility
 router.route("/").get(getUserOrders);
 router.route("/:id").get(getOrderById);
 router.route("/:id/status").put(updateOrderStatus);
+router.route("/:id/cancel").post(requestCancellation);
 
 export default router;

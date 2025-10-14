@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { Order } from "../models/order.model.js";
+import { sendPaymentSuccessEmail } from "../services/email.service.js";
 import {
   createRazorpayOrder,
   verifyRazorpayPayment,
@@ -67,7 +68,7 @@ const initiatePayment = asyncHandler(async (req, res) => {
               name: order.shippingAddress.fullName,
               email: order.shippingAddress.email,
               phone: order.shippingAddress.phone,
-            }
+            },
           },
           "Payment initiated successfully"
         )
@@ -79,20 +80,25 @@ const initiatePayment = asyncHandler(async (req, res) => {
     await Order.findByIdAndUpdate(orderId, {
       "paymentDetails.status": "failed",
     });
-    
+
     throw new ApiError(500, `Payment initiation failed: ${error.message}`);
   }
 });
 
 const verifyPayment = asyncHandler(async (req, res) => {
-  const { 
-    razorpay_order_id, 
-    razorpay_payment_id, 
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
     razorpay_signature,
-    orderId 
+    orderId,
   } = req.body;
 
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+  if (
+    !razorpay_order_id ||
+    !razorpay_payment_id ||
+    !razorpay_signature ||
+    !orderId
+  ) {
     throw new ApiError(400, "Missing required payment verification data");
   }
 
@@ -168,6 +174,8 @@ const getPaymentStatus = asyncHandler(async (req, res) => {
   if (!order) {
     throw new ApiError(404, "Order not found");
   }
+
+  sendPaymentSuccessEmail();
 
   return res.status(200).json(
     new ApiResponse(

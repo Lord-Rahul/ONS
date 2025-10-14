@@ -2,7 +2,7 @@ import {
   addProduct,
   deleteProduct,
   getAllProducts,
-  getProoductById,
+  getProductById,
   updateProduct,
 } from "../Controllers/product.controller.js";
 import { Router } from "express";
@@ -16,7 +16,7 @@ router
   .route("/addproduct")
   .post(verifyJWT, verifyAdmin, uploadProductImages, addProduct);
 router.route("/").get(getAllProducts);
-router.route("/:id").get(getProoductById);
+router.route("/:id").get(getProductById);
 router.route("/:id").delete(verifyJWT, verifyAdmin, deleteProduct);
 router
   .route("/:id")
