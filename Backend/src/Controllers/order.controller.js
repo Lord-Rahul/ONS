@@ -23,10 +23,17 @@ const placeOrder = asyncHandler(async (req, res) => {
   }
 
   // Validate shipping address fields
-  const requiredAddressFields = ['fullName', 'email', 'phone', 'address', 'city', 'state', 'pincode'];
+  const requiredAddressFields = ['fullName', 'email', 'phone', 'address1', 'city', 'state', 'pincode'];
   for (const field of requiredAddressFields) {
-    if (!shippingAddress[field] || shippingAddress[field].trim() === '') {
-      throw new ApiError(400, `${field} is required in shipping address`);
+    if (field === 'pincode') {
+      // Pincode is a number, check differently
+      if (!shippingAddress[field] || isNaN(shippingAddress[field])) {
+        throw new ApiError(400, `${field} is required in shipping address`);
+      }
+    } else {
+      if (!shippingAddress[field] || shippingAddress[field].toString().trim() === '') {
+        throw new ApiError(400, `${field} is required in shipping address`);
+      }
     }
   }
 
@@ -36,6 +43,9 @@ const placeOrder = asyncHandler(async (req, res) => {
 
   // Get user's cart
   const cart = await Cart.findOne({ user: userId }).populate("items.product");
+
+  console.log('🛒 Cart found:', cart ? `${cart.items?.length || 0} items` : 'null');
+  console.log('🛒 Cart items:', cart?.items || []);
 
   if (!cart || !cart.items || cart.items.length === 0) {
     throw new ApiError(
@@ -121,7 +131,15 @@ const placeOrder = asyncHandler(async (req, res) => {
   await cart.save();
 
   await order.populate("user", "fullName email phone ");
-  await sendOrderConfirmationEmail(order)
+  
+  // Send email confirmation (non-blocking - don't fail order if email fails)
+  try {
+    await sendOrderConfirmationEmail(order);
+    console.log('✅ Order confirmation email sent successfully');
+  } catch (emailError) {
+    console.error('⚠️ Failed to send order confirmation email:', emailError.message);
+    // Don't throw error - order should still be created even if email fails
+  }
 
   return res
     .status(201)

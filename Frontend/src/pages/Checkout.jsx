@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import useToast from '../hooks/useToast.js';
 import orderService from '../services/orderService.js';
+import razorpayService from '../services/razorpayService.js';
 
 const Checkout = () => {
   const { user } = useAuth();
@@ -117,60 +118,86 @@ const Checkout = () => {
           fullName: formData.fullName,
           email: formData.email,
           phone: formData.phone,
-          address: formData.address,
+          address1: formData.address, // Changed from 'address' to 'address1'
           city: formData.city,
           state: formData.state,
-          pincode: formData.pincode,
+          pincode: parseInt(formData.pincode), // Convert to number
         },
-        paymentMethod: formData.paymentMethod,
+        paymentMethod: formData.paymentMethod === 'online' ? 'UPI' : 'COD', // Map to valid enum value
         totalAmount: cartSummary.finalTotal,
       };
 
-      console.log('🔄 Creating order:', orderData);
+      console.log(' Creating order:', orderData);
       
       // Add more detailed logging for debugging
-      console.log('📊 Order items detail:', orderData.items.map(item => ({
+      console.log(' Order items detail:', orderData.items.map(item => ({
         productId: item.product,
         quantity: item.quantity,
         price: item.price
       })));
       
-      console.log('🏠 Shipping address:', orderData.shippingAddress);
-      console.log('💳 Payment method:', orderData.paymentMethod);
-      console.log('💰 Total amount:', orderData.totalAmount);
+      console.log(' Shipping address:', orderData.shippingAddress);
+      console.log(' Payment method:', orderData.paymentMethod);
+      console.log(' Total amount:', orderData.totalAmount);
 
       const orderResponse = await orderService.placeOrder(orderData);
 
-      console.log('📥 Order response:', orderResponse);
+      console.log(' Order response:', orderResponse);
 
       if (!orderResponse.success) {
         // Better error message display
-        console.error('❌ Order creation failed:', orderResponse.error);
+        console.error(' Order creation failed:', orderResponse.error);
         throw new Error(orderResponse.message || orderResponse.error || 'Failed to create order');
       }
 
       const order = orderResponse.data;
-      console.log('✅ Order created successfully:', order);
+      console.log(' Order created successfully:', order);
 
       if (formData.paymentMethod === 'online') {
-        // Handle online payment
-        console.log('🔄 Processing online payment...');
-        addToast('Order created! Redirecting to payment...', 'info');
+        //  Handle Razorpay payment
+        console.log(' Processing Razorpay payment for order:', order._id);
+        addToast('Order created! Opening payment gateway...', 'info');
         
-        // For now, just redirect to a success page
-        // You can integrate payment processing later
-        await clearCart();
-        addToast('Order placed successfully! 🎉', 'success');
-        navigate(`/orders/${order._id}`, { 
-          state: { 
-            orderCreated: true 
-          } 
-        });
+        try {
+          // Process payment with Razorpay
+          const paymentResult = await razorpayService.processPayment(order._id, {
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.phone
+          });
+          
+          console.log(' Payment successful:', paymentResult);
+          
+          // Clear cart after successful payment
+          await clearCart();
+          
+          // Redirect to payment success page
+          addToast('Payment successful! ', 'success');
+          navigate('/payment/success', {
+            state: {
+              orderId: order._id,
+              orderNumber: order.orderNumber || order._id,
+              paymentId: paymentResult.paymentId
+            }
+          });
+          
+        } catch (paymentError) {
+          console.error(' Payment failed:', paymentError);
+          
+          // Payment failed but order is created
+          addToast(
+            paymentError.message || 'Payment failed. You can retry from your orders page.',
+            'error'
+          );
+          
+          // Redirect to orders page
+          navigate(`/orders/${order._id}`);
+        }
       } else {
         // COD Order
-        console.log('✅ COD order placed');
+        console.log(' COD order placed');
         await clearCart();
-        addToast('Order placed successfully! 🎉', 'success');
+        addToast('Order placed successfully! ', 'success');
         navigate(`/orders/${order._id}`, { 
           state: { 
             orderCreated: true 
@@ -179,7 +206,7 @@ const Checkout = () => {
       }
 
     } catch (error) {
-      console.error('❌ Order creation failed:', error);
+      console.error(' Order creation failed:', error);
       
       // Better error handling with more specific messages
       let errorMessage = 'Failed to place order. ';

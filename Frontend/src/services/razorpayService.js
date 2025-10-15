@@ -11,10 +11,10 @@ class RazorpayService {
     try {
       await loadRazorpayScript();
       this.razorpay = window.Razorpay;
-      console.log('✅ Razorpay script loaded successfully');
+      console.log(' Razorpay script loaded successfully');
       return window.Razorpay;
     } catch (error) {
-      console.error('❌ Failed to load Razorpay script:', error);
+      console.error(' Failed to load Razorpay script:', error);
       throw error;
     }
   }
@@ -22,17 +22,17 @@ class RazorpayService {
   // Initiate payment with backend
   async initiatePayment(orderId) {
     try {
-      console.log('🔄 Initiating payment for order:', orderId);
-      const response = await api.post(`/payments/initiate/${orderId}`);
+      console.log(' Initiating Razorpay payment for order:', orderId);
+      const response = await api.post(`/payments/razorpay/initiate/${orderId}`);
       
       if (response.data.success) {
-        console.log('✅ Payment initiated:', response.data.data);
+        console.log(' Payment initiated:', response.data.data);
         return response.data.data;
       } else {
         throw new Error(response.data.message || 'Payment initiation failed');
       }
     } catch (error) {
-      console.error('❌ Payment initiation error:', error);
+      console.error(' Payment initiation error:', error);
       throw error.response?.data || error;
     }
   }
@@ -70,7 +70,7 @@ class RazorpayService {
           
           // Success handler
           handler: async (response) => {
-            console.log('✅ Razorpay payment success:', response);
+            console.log(' Razorpay payment success:', response);
             try {
               const verificationResult = await this.verifyPayment({
                 razorpay_order_id: response.razorpay_order_id,
@@ -80,7 +80,7 @@ class RazorpayService {
               });
               resolve(verificationResult);
             } catch (error) {
-              console.error('❌ Payment verification failed:', error);
+              console.error(' Payment verification failed:', error);
               reject(error);
             }
           },
@@ -88,24 +88,24 @@ class RazorpayService {
           // Error handler
           modal: {
             ondismiss: () => {
-              console.log('⚠️ Razorpay checkout dismissed');
+              console.log(' Razorpay checkout dismissed');
               reject(new Error('Payment cancelled by user'));
             },
           },
         };
 
-        console.log('🔄 Opening Razorpay checkout');
+        console.log(' Opening Razorpay checkout');
         const rzp = new window.Razorpay(rzpOptions);
 
         rzp.on('payment.failed', (response) => {
-          console.error('❌ Razorpay payment failed:', response.error);
+          console.error(' Razorpay payment failed:', response.error);
           reject(new Error(response.error.description || 'Payment failed'));
         });
 
         rzp.open();
       });
     } catch (error) {
-      console.error('❌ Razorpay checkout error:', error);
+      console.error(' Razorpay checkout error:', error);
       throw error;
     }
   }
@@ -113,17 +113,17 @@ class RazorpayService {
   // Verify payment with backend
   async verifyPayment(paymentData) {
     try {
-      console.log('🔄 Verifying payment:', paymentData);
-      const response = await api.post('/payments/verify', paymentData);
+      console.log(' Verifying Razorpay payment:', paymentData);
+      const response = await api.post('/payments/razorpay/verify', paymentData);
       
       if (response.data.success) {
-        console.log('✅ Payment verified:', response.data.data);
+        console.log(' Payment verified:', response.data.data);
         return response.data.data;
       } else {
         throw new Error(response.data.message || 'Payment verification failed');
       }
     } catch (error) {
-      console.error('❌ Payment verification error:', error);
+      console.error(' Payment verification error:', error);
       throw error.response?.data || error;
     }
   }
@@ -131,7 +131,7 @@ class RazorpayService {
   // Get payment status
   async getPaymentStatus(orderId) {
     try {
-      const response = await api.get(`/payments/status/${orderId}`);
+      const response = await api.get(`/payments/razorpay/status/${orderId}`);
       return response.data.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -141,7 +141,7 @@ class RazorpayService {
   // Complete payment flow
   async processPayment(orderId, customerDetails = {}) {
     try {
-      console.log('🔄 Processing payment for order:', orderId);
+      console.log(' Processing payment for order:', orderId);
       
       // Step 1: Initiate payment
       const paymentData = await this.initiatePayment(orderId);
@@ -158,12 +158,12 @@ class RazorpayService {
       
       return verificationResult;
     } catch (error) {
-      console.error('❌ Payment process error:', error);
+      console.error(' Payment process error:', error);
       throw error;
     }
   }
 }
 
-// ✅ Export as default
+//  Export as default
 const razorpayService = new RazorpayService();
 export default razorpayService;
