@@ -1,11 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Users, ShoppingBag, TrendingUp, Download, Zap } from 'lucide-react';
+import {
+  BarChart as LucideBarChart,
+  Users,
+  ShoppingBag,
+  TrendingUp,
+  Download,
+  Zap,
+} from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import adminService from '../services/adminService.js';
 import useToast from '../hooks/useToast.js';
 
 const AdminDashboard = () => {
   const { addToast } = useToast();
   const [stats, setStats] = useState(null);
+  const [salesReport, setSalesReport] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,9 +33,17 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await adminService.getDashboardStats();
-      if (response.success) {
-        setStats(response.data);
+      const [statsResponse, reportResponse] = await Promise.all([
+        adminService.getDashboardStats(),
+        adminService.getSalesReport({ type: 'monthly' }),
+      ]);
+
+      if (statsResponse.success) {
+        setStats(statsResponse.data);
+      }
+
+      if (reportResponse.success) {
+        setSalesReport(reportResponse.data?.data?.data || []);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -70,6 +96,14 @@ const AdminDashboard = () => {
         return 'bg-yellow-100 text-yellow-800';
     }
   };
+
+  const chartData = salesReport.map((entry) => ({
+    period: entry.period,
+    revenue: entry.revenue,
+    orders: entry.orders,
+  }));
+
+  const chartColors = ['#111827', '#374151', '#4b5563', '#6b7280', '#9ca3af'];
 
   if (loading) {
     return (
@@ -134,11 +168,39 @@ const AdminDashboard = () => {
           {/* Sales Chart */}
           <div className="lg:col-span-2 bg-white border border-gray-200 p-6 rounded-lg">
             <h3 className="text-lg font-light text-black mb-6 flex items-center gap-2">
-              <BarChart className="w-5 h-5" />
+              <LucideBarChart className="w-5 h-5" />
               Sales Overview
             </h3>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded text-gray-500 font-light">
-              <span>Chart will display here using your preferred charting library</span>
+            <div className="h-80 bg-gray-50 rounded p-4">
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="period" tick={{ fontSize: 12, fill: '#6b7280' }} />
+                    <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: '12px',
+                        border: '1px solid #e5e7eb',
+                        backgroundColor: '#ffffff',
+                      }}
+                      formatter={(value, name) => [
+                        name === 'revenue' ? `₹${Number(value).toLocaleString()}` : value,
+                        name === 'revenue' ? 'Revenue' : 'Orders',
+                      ]}
+                    />
+                    <Bar dataKey="revenue" radius={[8, 8, 0, 0]}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={entry.period} fill={chartColors[index % chartColors.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-500 font-light">
+                  No sales data available yet.
+                </div>
+              )}
             </div>
           </div>
 

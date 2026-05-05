@@ -90,7 +90,7 @@ const PrivacyPolicy = () => {
             <p>
               If you have questions about this Privacy Policy or our privacy practices, please contact us at:<br />
               <strong>Email:</strong> privacy@ons.store<br />
-              <strong>Address:</strong> 123 Heritage Lane, New Delhi, India 110001
+              <strong>Address:</strong> Baijnath, Himachal Pradesh, India
             </p>
           </div>
 

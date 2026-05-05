@@ -205,9 +205,8 @@ const Footer = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <p className="text-gray-400 font-light text-xs sm:text-sm leading-relaxed">
-                  123 Fashion Street<br />
-                  Mumbai, Maharashtra 400001<br />
-                  India
+                  Baijnath<br />
+                  Himachal Pradesh, India<br />
                 </p>
               </div>
               

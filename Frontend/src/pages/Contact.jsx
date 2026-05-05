@@ -166,8 +166,8 @@ const Contact = () => {
                 </div>
                 <div>
                   <p className="text-gray-600 font-light">
-                    123 Heritage Lane<br />
-                    New Delhi, India 110001
+                    Baijnath<br />
+                    Himachal Pradesh, India
                   </p>
                 </div>
               </div>

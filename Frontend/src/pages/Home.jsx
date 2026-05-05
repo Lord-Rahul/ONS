@@ -70,17 +70,17 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=400&fit=crop',
+                image: 'https://blingbag.co.in/cdn/shop/files/GoldenKashmiraAntiqueJewellerySet_1.jpg',
                 title: 'Artisan Collection',
                 desc: 'Handcrafted by skilled artisans preserving traditional techniques'
               },
               {
-                image: 'https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=600&h=400&fit=crop',
+                image: 'https://www.giva.co/cdn/shop/articles/1-min_7c32be2b-8045-4a94-a1bb-ef3f91115a07.jpg?v=1760355237',
                 title: 'Sustainable Fashion',
                 desc: 'Eco-friendly materials and ethical production practices'
               },
               {
-                image: 'https://images.unsplash.com/photo-1539651038615-a1d6c6ab67a1?w=600&h=400&fit=crop',
+                image: 'https://medias.utsavfashion.com/media/catalog/product/cache/1/small_image/295x/040ec09b1e35df139433887a97daa66f/s/t/stone-studded-necklace-set-v1-jdn666.jpg',
                 title: 'Premium Quality',
                 desc: 'Only the finest fabrics and meticulous attention to detail'
               }
