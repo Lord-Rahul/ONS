@@ -4,18 +4,39 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import morgan from "morgan";
 import { api } from "./constants.js";
+import { generalLimiter } from "./middlewares/rateLimiter.middleware.js";
+import logger from "./utils/logger.js";
 
 const app = express();
 app.use("/api/v1/payments/webhook", express.raw({ type: "application/json" }));
 
+// CORS Configuration - Validate origins
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.FRONTEND_URL,
+  process.env.PRODUCTION_URL
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Idempotency-Key']
   })
 );
 
 app.use(cookieParser());
+
+// Apply general rate limiter to all routes
+app.use(generalLimiter);
 
 app.use(
   express.json({
@@ -35,9 +56,18 @@ app.use(
   })
 );
 
+// Error handling middleware
 app.use((err, req, res, next) => {
-  const statusCode = err.statuscode || err.statusCode || 500;
+  const statusCode = err.statusCode || err.statuscode || 500;
   const message = err.message || "Internal Server Error";
+
+  // Log errors
+  logger.error(`${req.method} ${req.path}`, {
+    statusCode,
+    message,
+    userId: req.user?._id || 'anonymous',
+    ip: req.ip
+  });
 
   const response = {
     success: false,
@@ -61,6 +91,7 @@ import uploadRoutes from "./routes/upload.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import paymentsRoutes from "./routes/payments.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 // Health check endpoint
 app.get(`${api}/health`, (req, res) => {
@@ -79,6 +110,7 @@ app.use(`${api}/cart`, cartRoutes);
 app.use(`${api}/orders`, orderRouter);
 app.use(`${api}/payments/phonepe`, paymentRoutes);
 app.use(`${api}/payments/razorpay`, paymentsRoutes);
+app.use(`${api}/admin`, adminRoutes);
 
 // 404 handler - must be after all routes
 app.use((req, res) => {

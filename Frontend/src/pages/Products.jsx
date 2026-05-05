@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import productService from "../services/productService.js";
 import useCart from "../hooks/useCart.js";
@@ -24,45 +24,56 @@ const Products = () => {
     hasMore: false,
   });
 
-  const [filters, setFilters] = useState({
-    category: "",
-    sortBy: "newest",
-    priceRange: "",
-    search: "",
-  });
-
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useCart();
   const { addToast } = useToast(); // 🔥 Move this to top level
 
-  // Update filters from URL params
-  useEffect(() => {
-    const newFilters = {
-      category: searchParams.get("category") || "",
-      search: searchParams.get("search") || "",
-      sortBy: searchParams.get("sortBy") || "newest",
-      priceRange: searchParams.get("priceRange") || "",
-    };
-    setFilters(newFilters);
-  }, [searchParams]);
+  const getDefaultSize = (product) => {
+    if (!product?.sizes || !Array.isArray(product.sizes) || product.sizes.length === 0) {
+      return null;
+    }
+
+    const availableSize = product.sizes.find((sizeOption) => {
+      if (typeof sizeOption === "string") {
+        return true;
+      }
+
+      return (sizeOption?.stock || 0) > 0;
+    });
+
+    if (!availableSize) {
+      return null;
+    }
+
+    return typeof availableSize === "object" ? availableSize.size : availableSize;
+  };
+
+  const filters = useMemo(() => ({
+    category: searchParams.get("category") || "",
+    search: searchParams.get("search") || "",
+    sortBy: searchParams.get("sortBy") || "newest",
+    priceRange: searchParams.get("priceRange") || "",
+  }), [searchParams]);
+
+  const page = searchParams.get("page") || 1;
 
   // Fetch products when filters change
   useEffect(() => {
     fetchProducts();
-  }, [filters, searchParams]);
+  }, [filters, page]);
 
   // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const params = {
-        page: searchParams.get("page") || 1,
+        page,
         limit: 12,
         category: filters.category,
         search: filters.search,
@@ -96,7 +107,7 @@ const Products = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters, searchParams]);
+  };
 
   const fetchCategories = async () => {
     try {
@@ -129,23 +140,30 @@ const Products = () => {
     e.preventDefault();
     e.stopPropagation();
 
+    const size = getDefaultSize(product);
+
+    if (!size) {
+      addToast("Please open the product page to choose a size.", "warning", 3500);
+      return;
+    }
+
     try {
       setAddingToCart(product._id);
 
       await addToCart({
         productId: product._id,
         quantity: 1,
-        size: "M", // Default size
+        size,
         color: "Default", // Default color
       });
 
       // 🔥 Use the hook that's already called at component level
-      addToast(`✅ ${product.name} added to cart!`, "success", 3000);
+      addToast(`${product.name} added to cart.`, "success", 3000);
     } catch (error) {
       console.error("Error adding to cart:", error);
 
       // 🔥 Use the hook that's already called at component level
-      addToast("❌ Failed to add item to cart", "error", 4000);
+      addToast("Failed to add item to cart.", "error", 4000);
     } finally {
       setAddingToCart(null);
     }

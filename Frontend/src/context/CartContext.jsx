@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import cartService from '../services/cartService.js';
 import { useAuth } from './AuthContext.jsx';
 import useToast from '../hooks/useToast.js';
@@ -138,6 +138,7 @@ export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const { isAuthenticated, user } = useAuth();
   const { addToast } = useToast();
+  const lastLoadedUserIdRef = useRef(null);
 
   // Create a loadCart function that can be reused
   const loadCart = async () => {
@@ -175,8 +176,21 @@ export const CartProvider = ({ children }) => {
 
   // Load cart when user is authenticated
   useEffect(() => {
+    const userId = user?._id || null;
+
+    if (!isAuthenticated || !userId) {
+      lastLoadedUserIdRef.current = null;
+      loadCart();
+      return;
+    }
+
+    if (lastLoadedUserIdRef.current === userId) {
+      return;
+    }
+
+    lastLoadedUserIdRef.current = userId;
     loadCart();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user?._id]);
 
   const addToCart = async (item) => {
     if (!isAuthenticated) {
@@ -193,7 +207,7 @@ export const CartProvider = ({ children }) => {
       
       if (response.success) {
         dispatch({ type: CART_ACTIONS.ADD_ITEM_SUCCESS, payload: response.data });
-        addToast('Item added to cart successfully! 🛒', 'success');
+        addToast('Item added to cart successfully.', 'success');
         return true;
       } else {
         throw new Error(response.message || 'Failed to add item to cart');
@@ -322,4 +336,3 @@ export const useCart = () => {
   return context;
 };
 
-export default CartContext;

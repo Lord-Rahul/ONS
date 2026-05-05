@@ -9,9 +9,23 @@ import Checkout from "../pages/Checkout.jsx";
 import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
 import Orders from "../pages/Orders.jsx";
-import Profile from "../pages/Profile.jsx"; // ✅ Add this missing import
+import Profile from "../pages/Profile.jsx";
 import PaymentSuccess from "../pages/PaymentSuccess.jsx";
+import About from "../pages/About.jsx";
+import Contact from "../pages/Contact.jsx";
+import FAQs from "../pages/FAQs.jsx";
+import PrivacyPolicy from "../pages/PrivacyPolicy.jsx";
+import TermsAndConditions from "../pages/TermsAndConditions.jsx";
+import ShippingInfo from "../pages/ShippingInfo.jsx";
+import NotFound from "../pages/NotFound.jsx";
+import AdminDashboard from "../pages/AdminDashboard.jsx";
+import AdminProducts from "../pages/AdminProducts.jsx";
+import AdminOrders from "../pages/AdminOrders.jsx";
+import AdminUsers from "../pages/AdminUsers.jsx";
+import AdminCategories from "../pages/AdminCategories.jsx";
+import AdminReports from "../pages/AdminReports.jsx";
 import { Layout, ProtectedRoute } from "../components/index.js";
+import AdminLayout from "../components/admin/AdminLayout.jsx";
 
 const AppRoutes = () => {
   return (
@@ -21,6 +35,12 @@ const AppRoutes = () => {
         <Route path="products" element={<Products />} />
         <Route path="products/:id" element={<ProductDetail />} />
         <Route path="cart" element={<Cart />} />
+        <Route path="about" element={<About />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="faqs" element={<FAQs />} />
+        <Route path="shipping-info" element={<ShippingInfo />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="terms-and-conditions" element={<TermsAndConditions />} />
       </Route>
 
       <Route path="/login" element={<Login />} />
@@ -71,25 +91,54 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
-        <Route
-          path="*"
-          element={
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                <p className="text-gray-600 mb-6">Page not found</p>
-                <button
-                  onClick={() => window.history.back()}
-                  className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800"
-                >
-                  Go Back
-                </button>
-              </div>
-            </div>
-          }
-        />
       </Route>
+
+      {/* Admin Routes */}
+      <Route path="/admin" element={
+        <ProtectedRoute adminOnly>
+          <AdminLayout>
+            <AdminDashboard />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/products" element={
+        <ProtectedRoute adminOnly>
+          <AdminLayout>
+            <AdminProducts />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/orders" element={
+        <ProtectedRoute adminOnly>
+          <AdminLayout>
+            <AdminOrders />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/users" element={
+        <ProtectedRoute adminOnly>
+          <AdminLayout>
+            <AdminUsers />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/categories" element={
+        <ProtectedRoute adminOnly>
+          <AdminLayout>
+            <AdminCategories />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/reports" element={
+        <ProtectedRoute adminOnly>
+          <AdminLayout>
+            <AdminReports />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* 404 Not Found Route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

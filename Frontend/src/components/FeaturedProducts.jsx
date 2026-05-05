@@ -11,6 +11,26 @@ const FeaturedProducts = () => {
   const { addToCart } = useCart();
   const { addToast } = useToast();
 
+  const getDefaultSize = (product) => {
+    if (!product?.sizes || !Array.isArray(product.sizes) || product.sizes.length === 0) {
+      return null;
+    }
+
+    const availableSize = product.sizes.find((sizeOption) => {
+      if (typeof sizeOption === 'string') {
+        return true;
+      }
+
+      return (sizeOption?.stock || 0) > 0;
+    });
+
+    if (!availableSize) {
+      return null;
+    }
+
+    return typeof availableSize === 'object' ? availableSize.size : availableSize;
+  };
+
   useEffect(() => {
     fetchFeaturedProducts();
   }, []);
@@ -34,22 +54,29 @@ const FeaturedProducts = () => {
     e.preventDefault();
     e.stopPropagation();
 
+    const size = getDefaultSize(product);
+
+    if (!size) {
+      addToast('Please open the product page to choose a size.', 'warning', 3500);
+      return;
+    }
+
     try {
       await addToCart({
         productId: product._id,
         quantity: 1,
-        size: 'M', // Default size
+        size,
         color: 'Default' // Default color
       });
       
       // Show success toast
-      addToast(`✅ ${product.name} added to cart!`, 'success', 3000);
+      addToast(`${product.name} added to cart.`, 'success', 3000);
       
     } catch (error) {
       console.error('Error adding to cart:', error);
       
       // Show error toast
-      addToast('❌ Failed to add item to cart', 'error', 4000);
+      addToast('Failed to add item to cart.', 'error', 4000);
     }
   };
 

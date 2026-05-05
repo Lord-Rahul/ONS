@@ -51,9 +51,12 @@ const Login = () => {
     setError("");
     
     try {
-      await login(formData);
-      // Redirect to intended page or home
-      navigate(from, { replace: true });
+      const response = await login(formData);
+      const user = response?.data?.user;
+      const redirectPath = user?.isAdmin ? '/admin' : from;
+
+      // Redirect admins to the admin dashboard, otherwise use the original destination.
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error("Login error:", err);
       setError(

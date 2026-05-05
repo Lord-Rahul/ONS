@@ -137,9 +137,9 @@ const CustomerSupport = () => (
       Our customer service team is here to help with your orders and any questions you may have.
     </p>
     <div className="flex flex-col sm:flex-row gap-2 text-sm">
-      <span className="text-blue-600">📧 support@onsfashion.com</span>
-      <span className="text-blue-600">📞 +91 9876543210</span>
-      <span className="text-blue-600">💬 Live Chat Available</span>
+      <span className="text-gray-700">Email: support@onsfashion.com</span>
+      <span className="text-gray-700">Phone: +91 9876543210</span>
+      <span className="text-gray-700">Live chat available</span>
     </div>
     
     {/* Order Tracking Info */}

@@ -49,12 +49,12 @@ const Profile = () => {
       // Call update profile service (you'll need to implement this)
       // await updateProfile(formData);
       
-      addToast('Profile updated successfully! ✅', 'success');
+      addToast('Profile updated successfully.', 'success');
       setIsEditing(false);
       
     } catch (error) {
       console.error('Profile update error:', error);
-      addToast('Failed to update profile ❌', 'error');
+      addToast('Failed to update profile.', 'error');
     } finally {
       setLoading(false);
     }

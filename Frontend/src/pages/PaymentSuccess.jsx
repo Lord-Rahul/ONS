@@ -9,7 +9,7 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     // Show success message
-    addToast('Payment successful! 🎉', 'success');
+    addToast('Payment successful.', 'success');
     
     // Redirect to orders page after 3 seconds
     const timer = setTimeout(() => {

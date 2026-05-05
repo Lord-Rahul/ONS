@@ -25,7 +25,7 @@ const useCartActions = (uiState) => {
       await updateCartItem(itemId, newQuantity);
       
       // 🔥 Show success toast
-      addToast('✅ Cart updated successfully!', 'success', 2000);
+      addToast('Cart updated successfully.', 'success', 2000);
       
       console.log('✅ Cart item updated and refreshed');
       
@@ -50,7 +50,7 @@ const useCartActions = (uiState) => {
       await removeFromCart(itemId);
       
       // 🔥 Show success toast
-      addToast('🗑️ Item removed from cart', 'info', 2000);
+      addToast('Item removed from cart.', 'info', 2000);
       
       console.log('✅ Cart item removed and refreshed');
       
@@ -78,7 +78,7 @@ const useCartActions = (uiState) => {
       await clearCart();
       
       // 🔥 Show success toast
-      addToast('🧹 Cart cleared successfully!', 'info', 2000);
+      addToast('Cart cleared successfully.', 'info', 2000);
       
       console.log('✅ Cart cleared and refreshed');
       

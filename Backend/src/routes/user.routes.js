@@ -7,16 +7,17 @@ import {
   update,
 } from "../Controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { authLimiter, passwordLimiter } from "../middlewares/rateLimiter.middleware.js";
 
 const router = Router();
 
-//register user
-router.route("/register").post(registerUser);
-router.route("/login").post(loginUser);
+// Register and login with strict rate limiting
+router.route("/register").post(authLimiter, registerUser);
+router.route("/login").post(authLimiter, loginUser);
+
+// Protected routes
 router.route("/logout").post(verifyJWT, logoutUser);
-router.route("/changepassword").post(verifyJWT, changeUserPassword);
-router.route("/update").patch(verifyJWT,update)
-
-
+router.route("/changepassword").post(verifyJWT, passwordLimiter, changeUserPassword);
+router.route("/update").patch(verifyJWT, update);
 
 export default router;

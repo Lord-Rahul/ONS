@@ -175,7 +175,11 @@ const getPaymentStatus = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Order not found");
   }
 
-  sendPaymentSuccessEmail();
+  if (order.paymentDetails?.status === "completed") {
+    sendPaymentSuccessEmail(order).catch((error) => {
+      console.error("Failed to send Razorpay payment success email:", error);
+    });
+  }
 
   return res.status(200).json(
     new ApiResponse(

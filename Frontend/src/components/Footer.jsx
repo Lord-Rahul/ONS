@@ -33,23 +33,21 @@ const Footer = () => {
     ],
     company: [
       { name: "About Us", path: "/about" },
-      { name: "Our Story", path: "/story" },
-      { name: "Careers", path: "/careers" },
+      { name: "Contact Us", path: "/contact" },
+      { name: "Blog", path: "/blog" },
       { name: "Press", path: "/press" },
-      { name: "Wholesale", path: "/wholesale" },
     ],
     support: [
-      { name: "Contact Us", path: "/contact" },
+      { name: "FAQs", path: "/faqs" },
+      { name: "Shipping Info", path: "/shipping-info" },
       { name: "Size Guide", path: "/size-guide" },
-      { name: "Shipping Info", path: "/shipping" },
-      { name: "Returns & Exchange", path: "/returns" },
       { name: "Care Instructions", path: "/care" },
     ],
     legal: [
-      { name: "Privacy Policy", path: "/privacy" },
-      { name: "Terms of Service", path: "/terms" },
-      { name: "Refund Policy", path: "/refund" },
-      { name: "Cookie Policy", path: "/cookies" },
+      { name: "Privacy Policy", path: "/privacy-policy" },
+      { name: "Terms & Conditions", path: "/terms-and-conditions" },
+      { name: "Refund Policy", path: "/refund-policy" },
+      { name: "Cookie Policy", path: "/cookie-policy" },
     ],
   };
 

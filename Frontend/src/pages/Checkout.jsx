@@ -398,11 +398,10 @@ const Checkout = () => {
                         className="mr-3"
                       />
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">💳</span>
                         <div>
                           <div className="font-medium">Online Payment</div>
                           <div className="text-sm text-gray-600">Credit/Debit Card, UPI, Net Banking</div>
-                          <div className="text-xs text-green-600 mt-1">✓ Secure & Fast</div>
+                          <div className="text-xs text-green-600 mt-1">Secure and fast checkout</div>
                         </div>
                       </div>
                     </label>
@@ -417,7 +416,6 @@ const Checkout = () => {
                         className="mr-3"
                       />
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">💵</span>
                         <div>
                           <div className="font-medium">Cash on Delivery</div>
                           <div className="text-sm text-gray-600">Pay when you receive your order</div>

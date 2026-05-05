@@ -125,11 +125,11 @@ const ProductDetail = () => {
         color: selectedColor || null
       });
       
-      addToast(`✅ ${product.name} added to cart!`, 'success', 3000);
+      addToast(`${product.name} added to cart.`, 'success', 3000);
       
     } catch (error) {
       console.error('Error adding to cart:', error);
-      addToast('❌ Failed to add item to cart', 'error');
+      addToast('Failed to add item to cart.', 'error');
     } finally {
       setAddingToCart(false);
     }
