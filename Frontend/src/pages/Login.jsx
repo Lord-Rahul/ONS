@@ -75,7 +75,7 @@ const Login = () => {
       <div className="hidden lg:flex lg:w-1/2 relative bg-black">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=800&h=1200&fit=crop&crop=face"
+            src="https://assets2.andaazfashion.com/media/catalog/product/cache/1/image/500x750/a12781a7f2ccb3d663f7fd01e1bd2e4e/s/i/silk-pear-green-wedding-lehenga-with-sequins-work-llcv110773-1.jpg"
             alt="Fashion Model"
             className="w-full h-full object-cover opacity-60"
             loading="lazy"

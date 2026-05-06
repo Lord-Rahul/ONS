@@ -27,6 +27,15 @@ const CategoryGrid = () => {
   };
 
   const getCategoryImage = (category) => {
+    const dbImageUrl =
+      category?.image?.url ||
+      category?.imageUrl ||
+      (typeof category?.image === "string" ? category.image : null);
+
+    if (dbImageUrl) {
+      return dbImageUrl;
+    }
+
     const categoryImages = {
       'sarees': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&h=1067&fit=crop&crop=face',
       'kurtis': 'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=600&h=1067&fit=crop&crop=face',

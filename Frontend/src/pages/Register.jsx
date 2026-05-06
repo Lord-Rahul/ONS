@@ -174,7 +174,7 @@ const Register = () => {
       <div className="hidden lg:flex lg:w-1/2 relative bg-black">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=800&h=1200&fit=crop&crop=face"
+            src="https://assets2.andaazfashion.com/media/catalog/product/cache/1/image/500x750/a12781a7f2ccb3d663f7fd01e1bd2e4e/s/i/silk-pear-green-wedding-lehenga-with-sequins-work-llcv110773-1.jpg"
             alt="Fashion Collection"
             className="w-full h-full object-cover opacity-60"
             loading="lazy"

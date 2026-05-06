@@ -107,9 +107,18 @@ class AuthService {
     if (userData.email) {
       sanitized.email = userData.email.toLowerCase().trim();
     }
-    
-    if (userData.name) {
-      sanitized.name = userData.name.trim().replace(/[<>"/]/g, '');
+    // Preserve `fullName` (backend expects `fullName`) and fallback from `name`
+    if (userData.fullName) {
+      sanitized.fullName = userData.fullName.trim().replace(/[<>"/]/g, '');
+    } else if (userData.name) {
+      sanitized.fullName = userData.name.trim().replace(/[<>"/]/g, '');
+    }
+
+    // Preserve phone/number field - backend expects `number`
+    if (userData.number) {
+      sanitized.number = String(userData.number).replace(/\D/g, '');
+    } else if (userData.phone) {
+      sanitized.number = String(userData.phone).replace(/\D/g, '');
     }
     
     if (userData.password) {

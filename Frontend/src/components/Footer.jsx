@@ -66,7 +66,7 @@ const Footer = () => {
     { name: "Shipping Info", href: "/shipping" },
     { name: "Returns", href: "/returns" },
     { name: "Track Order", href: "/track-order" },
-    { name: "FAQ", href: "/faq" },
+    { name: "FAQ", href: "/faqs" },
   ];
 
   const policies = [

@@ -21,7 +21,13 @@ const sendEmail = async (mailOptions) => {
     return info;
   } catch (error) {
     console.error("email sending failed : ", error);
-    throw new ApiError(500, `Email sending failed : ${error.message}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "Email transport not configured or connection refused. Continuing without failing the request. Set EMAIL_HOST/EMAIL_PORT/EMAIL_USER/EMAIL_PASSWORD for real emails."
+      );
+    }
+    // Do not throw to avoid failing primary user flows (registration, orders) when SMTP is unavailable.
+    return null;
   }
 };
 

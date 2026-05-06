@@ -66,6 +66,14 @@ const AdminCategories = () => {
     cat.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getCategoryImageUrl = (category) => {
+    return (
+      category?.image?.url ||
+      category?.imageUrl ||
+      (typeof category?.image === 'string' ? category.image : '')
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -137,6 +145,13 @@ const AdminCategories = () => {
                   key={category._id}
                   className="bg-white border border-gray-200 p-6 rounded-lg hover:shadow-md transition-shadow"
                 >
+                  {getCategoryImageUrl(category) && (
+                    <img
+                      src={getCategoryImageUrl(category)}
+                      alt={category.name}
+                      className="w-full h-40 object-cover rounded mb-4"
+                    />
+                  )}
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-light text-black">{category.name}</h3>
                     <button
