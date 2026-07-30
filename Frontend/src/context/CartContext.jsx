@@ -28,32 +28,13 @@ const initialState = {
   error: null,
 };
 
-// ✅ Safe function to extract items array from cart data
 const extractItems = (cartData) => {
-  console.log('🔍 Extracting items from cart data:', cartData);
-  
-  if (!cartData) {
-    console.log('❌ No cart data provided');
-    return [];
-  }
-  
-  // Handle different possible structures
-  if (Array.isArray(cartData)) {
-    console.log('✅ Cart data is already an array');
-    return cartData;
-  }
-  
-  if (cartData.items && Array.isArray(cartData.items)) {
-    console.log('✅ Found items array in cart data');
-    return cartData.items;
-  }
-  
-  if (cartData.cart && cartData.cart.items && Array.isArray(cartData.cart.items)) {
-    console.log('✅ Found items array in nested cart object');
-    return cartData.cart.items;
-  }
-  
-  console.log('❌ Could not find items array, returning empty array');
+  if (!cartData) return [];
+  if (Array.isArray(cartData)) return cartData;
+  if (cartData.items && Array.isArray(cartData.items)) return cartData.items;
+  if (cartData.data && cartData.data.items && Array.isArray(cartData.data.items)) return cartData.data.items;
+  if (cartData.cart && cartData.cart.items && Array.isArray(cartData.cart.items)) return cartData.cart.items;
+  if (cartData.data && Array.isArray(cartData.data)) return cartData.data;
   return [];
 };
 

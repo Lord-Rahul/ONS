@@ -122,10 +122,10 @@ const addToCart = asyncHandler(async (req, res) => {
       cart.items[existingItemIndex].quantity + validatedQuantity;
 
     // Validate new total quantity
-    if (newQuantity > sizeInfo.stock) {
+    if (newQuantity > availableStock) {
       throw new ApiError(
         400,
-        `Cannot add that many items. Maximum ${sizeInfo.stock} items available in ${validatedSize} size.`
+        `Cannot add that many items. Maximum ${availableStock} items available in ${validatedSize} size.`
       );
     }
 
