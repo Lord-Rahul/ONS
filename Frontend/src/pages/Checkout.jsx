@@ -123,7 +123,7 @@ const Checkout = () => {
           state: formData.state,
           pincode: parseInt(formData.pincode), // Convert to number
         },
-        paymentMethod: formData.paymentMethod === 'online' ? 'UPI' : 'COD', // Map to valid enum value
+        paymentMethod: formData.paymentMethod === 'online' ? 'Razorpay' : 'COD',
         totalAmount: cartSummary.finalTotal,
       };
 
@@ -436,7 +436,7 @@ const Checkout = () => {
               {items.map((item) => (
                 <div key={`${item.product._id}-${item.size}-${item.color}`} className="flex items-center space-x-4">
                   <img
-                    src={item.product.images?.[0] || '/placeholder-image.jpg'}
+                    src={item.product.mainImage?.url || item.product.images?.[0] || '/placeholder-image.jpg'}
                     alt={item.product.name}
                     className="w-16 h-16 object-cover rounded-lg"
                   />

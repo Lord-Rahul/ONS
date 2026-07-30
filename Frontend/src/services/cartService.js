@@ -59,24 +59,16 @@ class CartService {
    */
   async addToCart(productData, quantity = 1, size = null, color = null) {
     try {
-      // Prepare request data
-      let requestData;
+      const pId = typeof productData === "object"
+        ? (productData.productId || productData._id || productData.id)
+        : productData;
 
-      if (typeof productData === "object" && productData.productId) {
-        requestData = {
-          productId: productData.productId,
-          quantity: productData.quantity || quantity,
-          size: productData.size || size,
-          color: productData.color || color,
-        };
-      } else {
-        requestData = {
-          productId: productData,
-          quantity,
-          size,
-          color,
-        };
-      }
+      requestData = {
+        productId: pId,
+        quantity: (typeof productData === "object" ? productData.quantity : null) || quantity || 1,
+        size: (typeof productData === "object" ? productData.size : null) || size,
+        color: (typeof productData === "object" ? productData.color : null) || color,
+      };
 
       // Validate required fields
       if (!requestData.productId) {
