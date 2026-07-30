@@ -122,7 +122,8 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.register(userData);
       
       if (response.success) {
-        dispatch({ type: 'LOGIN_SUCCESS', payload: response.data.user });
+        const userObj = response.data?.user || response.data;
+        dispatch({ type: 'LOGIN_SUCCESS', payload: userObj });
         return response;
       } else {
         throw new Error(response.message || 'Registration failed');

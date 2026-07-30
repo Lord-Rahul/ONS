@@ -129,13 +129,21 @@ const verifyPayment = asyncHandler(async (req, res) => {
 
     if (paymentDetails.status === "captured") {
       // Payment successful
-      await Order.findByIdAndUpdate(order._id, {
-        "paymentDetails.status": "completed",
-        "paymentDetails.gatewayPaymentId": razorpay_payment_id,
-        "paymentDetails.paidAt": new Date(),
-        status: "confirmed",
-        confirmedAt: new Date(),
-      });
+      const updatedOrder = await Order.findByIdAndUpdate(
+        order._id,
+        {
+          "paymentDetails.status": "completed",
+          "paymentDetails.gatewayPaymentId": razorpay_payment_id,
+          "paymentDetails.paidAt": new Date(),
+          status: "confirmed",
+          confirmedAt: new Date(),
+        },
+        { new: true }
+      ).populate("shippingAddress.email");
+
+      sendPaymentSuccessEmail(updatedOrder || order).catch((err) =>
+        console.error("Failed to send Razorpay payment success email:", err)
+      );
 
       return res.status(200).json(
         new ApiResponse(

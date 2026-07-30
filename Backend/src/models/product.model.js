@@ -172,6 +172,13 @@ const productSchema = mongoose.Schema(
   { timestamps: true }
 );
 
+productSchema.pre("save", function (next) {
+  if (this.sizes && Array.isArray(this.sizes) && this.sizes.length > 0) {
+    this.countInStock = this.sizes.reduce((total, s) => total + (Number(s.stock) || 0), 0);
+  }
+  next();
+});
+
 productSchema.index({ name: "text", description: "text" });
 productSchema.index({ category: 1, price: 1 });
 productSchema.index({ clothingType: 1 });

@@ -8,6 +8,7 @@ import { Product } from '../models/product.model.js';
 import { Category } from '../models/category.model.js';
 import { User } from '../models/user.model.js';
 import { deleteFromCloudinary } from '../middlewares/upload.middleware.js';
+import { sendOrderStatusEmail } from '../services/email.service.js';
 
 const parseMaybeJson = (value, fallback) => {
   if (value === undefined || value === null || value === '') {
@@ -571,7 +572,7 @@ const getOrders = asyncHandler(async (req, res) => {
 // Update Order Status
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, trackingNumber } = req.body;
 
   const validStatuses = [
     'pending',
@@ -589,15 +590,63 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Invalid status');
   }
 
-  const order = await Order.findByIdAndUpdate(
-    id,
-    { status },
-    { new: true }
-  ).populate('user', 'fullName email number');
-
-  if (!order) {
+  const existingOrder = await Order.findById(id);
+  if (!existingOrder) {
     throw new ApiError(404, 'Order not found');
   }
+
+  const updateData = { status };
+
+  switch (status) {
+    case 'confirmed':
+      updateData.confirmedAt = new Date();
+      break;
+    case 'shipped':
+      updateData.shippedAt = new Date();
+      if (trackingNumber) updateData.trackingNumber = trackingNumber;
+      break;
+    case 'delivered':
+      updateData.deliveredAt = new Date();
+      break;
+    case 'cancelled':
+      updateData.cancelledAt = new Date();
+      break;
+  }
+
+  // Stock Restoration Logic: If order is transitioning to cancelled or returned for the first time
+  const isNowCancelledOrReturned = status === 'cancelled' || status === 'returned';
+  const wasNotCancelledOrReturned = existingOrder.status !== 'cancelled' && existingOrder.status !== 'returned';
+
+  if (isNowCancelledOrReturned && wasNotCancelledOrReturned) {
+    for (const item of existingOrder.items) {
+      if (item.product) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          const sizeIndex = product.sizes.findIndex((s) => s.size === item.size);
+          if (sizeIndex !== -1) {
+            product.sizes[sizeIndex].stock += item.quantity;
+            product.countInStock = product.sizes.reduce(
+              (total, size) => total + size.stock,
+              0
+            );
+            await product.save();
+          }
+        }
+      }
+    }
+  }
+
+  const order = await Order.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  })
+    .populate('user', 'fullName email number')
+    .populate('items.product', 'name mainImage clothingType');
+
+  // Trigger email notification asynchronously
+  sendOrderStatusEmail(order, status).catch((err) =>
+    console.error(`Failed to send order status email for order ${id}:`, err)
+  );
 
   res.status(200).json(new ApiResponse(200, order, 'Order status updated successfully'));
 });

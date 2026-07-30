@@ -54,9 +54,21 @@ const registerUser = asyncHandler(async (req, res) => {
 
   await sendWelcomeEmail(createdUser);
 
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
+
   return res
     .status(201)
-    .json(new ApiResponse(200, createdUser, "user is registered sucessfully "));
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        201,
+        { user: createdUser, accessToken, refreshToken },
+        "user is registered successfully"
+      )
+    );
 });
 
 const loginUser = asyncHandler(async (req, res) => {

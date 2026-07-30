@@ -33,10 +33,11 @@ class AuthService {
       
       if (response.data.success) {
         const responseData = response.data.data;
-        localStorage.setItem('user', JSON.stringify(responseData.user));
+        const userObj = responseData?.user || responseData;
+        localStorage.setItem('user', JSON.stringify(userObj));
         
-        // ✅ Save token for register too
-        if (responseData.accessToken) {
+        // Save token for register too
+        if (responseData?.accessToken) {
           localStorage.setItem('authToken', responseData.accessToken);
         }
         
