@@ -16,6 +16,7 @@ const getOrigins = () => {
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:4173',
+    'https://store.thatrahulverma.in',
     'https://ons-liart.vercel.app',
     process.env.FRONTEND_URL,
     process.env.PRODUCTION_URL,
