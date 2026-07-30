@@ -16,6 +16,7 @@ const getOrigins = () => {
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:4173',
+    'https://ons-liart.vercel.app',
     process.env.FRONTEND_URL,
     process.env.PRODUCTION_URL,
   ];
@@ -35,7 +36,9 @@ app.use(
       if (!origin) return callback(null, true);
 
       const origins = getOrigins();
-      if (origins.includes(origin) || origins.includes('*') || process.env.ALLOWED_ORIGINS === '*') {
+      const isVercel = /\.vercel\.app$/.test(origin);
+
+      if (origins.includes(origin) || isVercel || origins.includes('*') || process.env.ALLOWED_ORIGINS === '*') {
         return callback(null, true);
       }
 
