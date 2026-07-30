@@ -54,12 +54,7 @@ const FeaturedProducts = () => {
     e.preventDefault();
     e.stopPropagation();
 
-    const size = getDefaultSize(product);
-
-    if (!size) {
-      addToast('Please open the product page to choose a size.', 'warning', 3500);
-      return;
-    }
+    const size = getDefaultSize(product) || "Free Size";
 
     try {
       await addToCart({

@@ -18,10 +18,7 @@ const validateQuantity = (quantity) => {
 const validateSize = (size) => {
   const validSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"];
   if (!size || !validSizes.includes(size)) {
-    throw new ApiError(
-      400,
-      `Invalid size. Must be one of: ${validSizes.join(", ")}`
-    );
+    return "Free Size";
   }
   return size;
 };
@@ -76,14 +73,6 @@ const addToCart = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid product ID format");
   }
 
-  if (!size) {
-    throw new ApiError(400, "Size is required");
-  }
-
-  // Validate quantity and size
-  const validatedQuantity = validateQuantity(quantity);
-  const validatedSize = validateSize(size);
-
   // Fetch product with concurrent stock check
   const product = await Product.findById(productId);
 
@@ -91,21 +80,30 @@ const addToCart = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Product not found");
   }
 
-  // Find size availability
-  const sizeInfo = product.sizes?.find((s) => s.size === validatedSize);
-
-  if (!sizeInfo) {
-    throw new ApiError(
-      400,
-      `Size ${validatedSize} is not available for this product`
-    );
+  // Handle optional size fallback
+  let targetSize = size;
+  if (!targetSize) {
+    if (product.sizes && product.sizes.length > 0) {
+      const avail = product.sizes.find((s) => s.stock > 0) || product.sizes[0];
+      targetSize = avail?.size || "Free Size";
+    } else {
+      targetSize = "Free Size";
+    }
   }
 
+  // Validate quantity and size
+  const validatedQuantity = validateQuantity(quantity);
+  const validatedSize = validateSize(targetSize);
+
+  // Find size availability or fallback to countInStock
+  const sizeInfo = product.sizes?.find((s) => s.size === validatedSize);
+  const availableStock = sizeInfo ? sizeInfo.stock : (product.countInStock || 0);
+
   // Validate stock
-  if (sizeInfo.stock < validatedQuantity) {
+  if (availableStock < validatedQuantity) {
     throw new ApiError(
       400,
-      `Only ${sizeInfo.stock} items available in ${validatedSize} size. Please adjust quantity.`
+      `Only ${availableStock} items available in ${validatedSize} size. Please adjust quantity.`
     );
   }
 

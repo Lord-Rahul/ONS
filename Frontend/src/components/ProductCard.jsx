@@ -95,23 +95,54 @@ const ProductRating = ({ rating }) => (
   </div>
 );
 
-const ProductActions = ({ product, onAddToCart, isAdding }) => (
-  <div className="px-3 sm:px-4 lg:px-6 pb-3 sm:pb-4 lg:pb-6">
-    <button
-      onClick={(e) => onAddToCart(product, e)}
-      disabled={product.countInStock === 0 || isAdding}
-      className="w-full bg-black text-white py-2 sm:py-3 px-3 sm:px-6 hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 font-light text-xs sm:text-sm tracking-[0.05em] sm:tracking-[0.1em] uppercase transform hover:translate-y-[-1px] disabled:hover:translate-y-0 flex items-center justify-center"
-    >
-      {isAdding ? (
-        <>
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-          Adding...
-        </>
-      ) : (
-        product.countInStock > 0 ? "Add to Cart" : "Out of Stock"
-      )}
-    </button>
-  </div>
-);
+const ProductActions = ({ product, onAddToCart }) => {
+  const [isAdding, setIsAdding] = React.useState(false);
+  const [justAdded, setJustAdded] = React.useState(false);
+
+  const handleClick = async (e) => {
+    try {
+      setIsAdding(true);
+      const res = await onAddToCart(product, e);
+      if (res !== false) {
+        setJustAdded(true);
+        setTimeout(() => setJustAdded(false), 1800);
+      }
+    } catch (err) {
+      console.error("Add to cart error:", err);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  return (
+    <div className="px-3 sm:px-4 lg:px-6 pb-3 sm:pb-4 lg:pb-6">
+      <button
+        onClick={handleClick}
+        disabled={product.countInStock === 0 || isAdding}
+        className={`w-full py-2 sm:py-3 px-3 sm:px-6 transition-all duration-300 font-light text-xs sm:text-sm tracking-[0.05em] sm:tracking-[0.1em] uppercase transform flex items-center justify-center ${
+          justAdded
+            ? "bg-emerald-700 text-white animate-btn-pop shadow-md"
+            : "bg-black text-white hover:bg-gray-800 hover:-translate-y-0.5"
+        } disabled:bg-gray-300 disabled:cursor-not-allowed`}
+      >
+        {isAdding ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+            Adding...
+          </>
+        ) : justAdded ? (
+          <span className="flex items-center gap-1.5 font-medium">
+            <svg className="w-4 h-4 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            Added to Cart!
+          </span>
+        ) : (
+          product.countInStock > 0 ? "Add to Cart" : "Out of Stock"
+        )}
+      </button>
+    </div>
+  );
+};
 
 export default ProductCard;

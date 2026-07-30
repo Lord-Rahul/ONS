@@ -8,10 +8,20 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isCartBouncing, setIsCartBouncing] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
-  const { itemCount } = useCart();
+  const { count, items } = useCart();
+  const itemCount = count || items?.length || 0;
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (itemCount > 0) {
+      setIsCartBouncing(true);
+      const timer = setTimeout(() => setIsCartBouncing(false), 450);
+      return () => clearTimeout(timer);
+    }
+  }, [itemCount]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -136,7 +146,9 @@ const Navbar = () => {
                 />
               </svg>
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs flex items-center justify-center font-light">
+                <span className={`absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs flex items-center justify-center font-light rounded-full transition-transform ${
+                  isCartBouncing ? "animate-cart-badge scale-125 bg-emerald-600" : ""
+                }`}>
                   {itemCount}
                 </span>
               )}
