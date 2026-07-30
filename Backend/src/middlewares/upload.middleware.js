@@ -53,9 +53,26 @@ export const deleteFromCloudinary = async (publicId) => {
 };
 
 export const getPublicIdFromUrl = (url) => {
-  const parts = url.split("/");
-  const filename = parts[parts.length - 1];
-  return filename.split(".")[0];
+  if (!url || typeof url !== "string") return "";
+  try {
+    const uploadIndex = url.indexOf("/upload/");
+    if (uploadIndex === -1) {
+      const parts = url.split("/");
+      const filename = parts[parts.length - 1];
+      return filename.split(".")[0];
+    }
+    let pathAfterUpload = url.substring(uploadIndex + 8);
+    pathAfterUpload = pathAfterUpload.replace(/^v\d+\//, "");
+    const lastDotIndex = pathAfterUpload.lastIndexOf(".");
+    if (lastDotIndex !== -1) {
+      pathAfterUpload = pathAfterUpload.substring(0, lastDotIndex);
+    }
+    return pathAfterUpload;
+  } catch (err) {
+    const parts = url.split("/");
+    const filename = parts[parts.length - 1];
+    return filename.split(".")[0];
+  }
 };
 
 export const uploadBase64Image = asyncHandler(

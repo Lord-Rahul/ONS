@@ -60,7 +60,11 @@ const adminService = {
 
   addProduct: async (productData) => {
     try {
-      const response = await api.post('/admin/products', toFormData(productData));
+      const response = await api.post('/admin/products', toFormData(productData), {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -69,7 +73,11 @@ const adminService = {
 
   updateProduct: async (productId, productData) => {
     try {
-      const response = await api.put(`/admin/products/${productId}`, toFormData(productData));
+      const response = await api.put(`/admin/products/${productId}`, toFormData(productData), {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
