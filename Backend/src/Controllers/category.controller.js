@@ -78,7 +78,7 @@ const updateCategory = asyncHandler(async (req, res) => {
 
   if (name && name !== category.name) {
     const existingCategory = await Category.findOne({
-      name: { $regex: new RegExp(`${name}$`, "i") },
+      name: { $regex: new RegExp(`^${name}$`, "i") },
       _id: { $ne: id },
     });
 

@@ -126,7 +126,7 @@ const paymentDetailsSchema = mongoose.Schema(
   {
     method: {
       type: String,
-      enum: ["PhonePe", "UPI", "Card", "Net Banking", "COD", "Wallet"],
+      enum: ["PhonePe", "Razorpay", "Online", "UPI", "Card", "Net Banking", "COD", "Wallet"],
       required: true,
     },
     status: {

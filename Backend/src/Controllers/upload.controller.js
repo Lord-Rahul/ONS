@@ -18,7 +18,7 @@ const uploadSingleImage = asyncHandler(async (req, res) => {
       {
         url: req.file.path,
         publicId: req.file.filename,
-        originalName: req.file.originalName,
+        originalName: req.file.originalname,
       },
       "image uploaded successfully"
     )

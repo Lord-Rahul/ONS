@@ -56,33 +56,6 @@ app.use(
   })
 );
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || err.statuscode || 500;
-  const message = err.message || "Internal Server Error";
-
-  // Log errors
-  logger.error(`${req.method} ${req.path}`, {
-    statusCode,
-    message,
-    userId: req.user?._id || 'anonymous',
-    ip: req.ip
-  });
-
-  const response = {
-    success: false,
-    statusCode,
-    message,
-  };
-
-  if (process.env.NODE_ENV !== "production") {
-    response.errors = err.errors || [];
-    response.stack = err.stack;
-  }
-
-  res.status(statusCode).json(response);
-});
-
 import orderRouter from "./routes/order.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
@@ -119,6 +92,33 @@ app.use((req, res) => {
     statusCode: 404,
     message: `Route ${req.originalUrl} not found`,
   });
+});
+
+// Global error handling middleware - MUST be after all routes and 404 handler
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || err.statuscode || 500;
+  const message = err.message || "Internal Server Error";
+
+  // Log errors
+  logger.error(`${req.method} ${req.path}`, {
+    statusCode,
+    message,
+    userId: req.user?._id || 'anonymous',
+    ip: req.ip
+  });
+
+  const response = {
+    success: false,
+    statusCode,
+    message,
+  };
+
+  if (process.env.NODE_ENV !== "production") {
+    response.errors = err.errors || [];
+    response.stack = err.stack;
+  }
+
+  res.status(statusCode).json(response);
 });
 
 export { app };

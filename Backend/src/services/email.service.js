@@ -1,32 +1,52 @@
 import nodemailer from "nodemailer";
-import { ApiError } from "../utils/apiError.js";
+import logger from "../utils/logger.js";
 
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: false,
+let transporterInstance = null;
+
+const getTransporter = () => {
+  if (transporterInstance) return transporterInstance;
+
+  const port = Number(process.env.EMAIL_PORT) || 587;
+  const host = process.env.EMAIL_HOST || "smtp.gmail.com";
+
+  transporterInstance = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
+    tls: {
+      rejectUnauthorized: false
+    }
   });
+
+  return transporterInstance;
+};
+
+export const getFromAddress = () => {
+  const name = process.env.EMAIL_FROM_NAME || "ONS Store";
+  const address = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || "noreply@onsstore.com";
+  return `"${name}" <${address}>`;
 };
 
 const sendEmail = async (mailOptions) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    logger.warn("Email credentials (EMAIL_USER/EMAIL_PASSWORD) are missing in .env. Skipping email dispatch.");
+    return null;
+  }
+
   try {
-    const transporter = createTransporter();
-    const info = await transporter.sendMail(mailOptions);
-    console.log("emails sent successfully ", info.messageId);
+    const transporter = getTransporter();
+    const info = await transporter.sendMail({
+      from: getFromAddress(),
+      ...mailOptions
+    });
+    logger.info(`Email sent successfully to ${mailOptions.to} (MessageId: ${info.messageId})`);
     return info;
   } catch (error) {
-    console.error("email sending failed : ", error);
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        "Email transport not configured or connection refused. Continuing without failing the request. Set EMAIL_HOST/EMAIL_PORT/EMAIL_USER/EMAIL_PASSWORD for real emails."
-      );
-    }
-    // Do not throw to avoid failing primary user flows (registration, orders) when SMTP is unavailable.
+    logger.error(`Failed to send email to ${mailOptions.to}: ${error?.message || error}`, { error: error?.stack });
     return null;
   }
 };
@@ -135,7 +155,6 @@ export const sendOrderConfirmationEmail = async (order) => {
   `;
 
   const mailOptions = {
-    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
     to: order.shippingAddress.email,
     subject: `Order Confirmation - ${order.orderNumber}`,
     html: emailHTML,
@@ -184,7 +203,6 @@ export const sendPaymentSuccessEmail = async (order) => {
   `;
 
   const mailOptions = {
-    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
     to: order.shippingAddress.email,
     subject: `Payment Successful - ${order.orderNumber}`,
     html: emailHTML
@@ -244,7 +262,6 @@ export const sendOrderStatusEmail = async (order, newStatus) => {
   `;
 
   const mailOptions = {
-    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
     to: order.shippingAddress.email,
     subject: `Order ${newStatus.replace('_', ' ').toUpperCase()} - ${order.orderNumber}`,
     html: emailHTML
@@ -291,7 +308,6 @@ export const sendWelcomeEmail = async (user) => {
   `;
 
   const mailOptions = {
-    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
     to: user.email,
     subject: 'Welcome to ONS Store!',
     html: emailHTML

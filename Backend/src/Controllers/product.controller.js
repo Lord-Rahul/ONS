@@ -238,9 +238,9 @@ const deleteProduct = asyncHandler(async (req, res) => {
     imagesToDelete.push(product.mainImage.publicId);
   }
 
-  if (product.additionalImages && product.additionalImages.publicId) {
+  if (product.additionalImages && Array.isArray(product.additionalImages)) {
     product.additionalImages.forEach((img) => {
-      if (img.publicId) {
+      if (img && img.publicId) {
         imagesToDelete.push(img.publicId);
       }
     });
