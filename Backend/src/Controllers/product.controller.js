@@ -128,9 +128,14 @@ const getAllProducts = asyncHandler(async (req, res) => {
     search,
     sortBy = "createdAt",
     sortOrder = "desc",
+    featured,
   } = req.query;
 
   const filter = {};
+
+  if (featured !== undefined) {
+    filter.isFeatured = featured === "true" || featured === true;
+  }
 
   if (category) {
     if (mongoose.Types.ObjectId.isValid(category)) {
