@@ -3,6 +3,7 @@ import {
   registerUser,
   loginUser,
   logoutUser,
+  refreshAccessToken,
   changeUserPassword,
   update,
 } from "../Controllers/user.controller.js";
@@ -14,6 +15,7 @@ const router = Router();
 // Register and login with strict rate limiting
 router.route("/register").post(authLimiter, registerUser);
 router.route("/login").post(authLimiter, loginUser);
+router.route("/refresh-token").post(refreshAccessToken);
 
 // Protected routes
 router.route("/logout").post(verifyJWT, logoutUser);

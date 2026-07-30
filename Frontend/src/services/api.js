@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+const defaultApiUrl =
+  import.meta.env.MODE === 'production'
+    ? 'https://ons1-aftymnz9.b4a.run/api/v1'
+    : 'http://localhost:8080/api/v1';
+
+const API_URL = import.meta.env.VITE_API_URL || defaultApiUrl;
 
 // Create axios instance
 const api = axios.create({

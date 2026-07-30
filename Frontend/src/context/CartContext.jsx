@@ -294,7 +294,7 @@ export const CartProvider = ({ children }) => {
     const items = state.items || [];
     const totalItems = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
     const subtotal = calculateTotal(items);
-    const shippingCost = subtotal >= 999 ? 0 : 99;
+    const shippingCost = subtotal >= 999 ? 0 : 50;
     const finalTotal = subtotal + shippingCost;
 
     return {

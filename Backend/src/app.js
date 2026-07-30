@@ -10,25 +10,40 @@ import logger from "./utils/logger.js";
 const app = express();
 app.use("/api/v1/payments/webhook", express.raw({ type: "application/json" }));
 
-// CORS Configuration - Validate origins
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  process.env.FRONTEND_URL,
-  process.env.PRODUCTION_URL
-].filter(Boolean);
+// CORS Configuration - Validate origins dynamically
+const getOrigins = () => {
+  const defaults = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:4173',
+    process.env.FRONTEND_URL,
+    process.env.PRODUCTION_URL,
+  ];
+
+  if (process.env.ALLOWED_ORIGINS) {
+    const custom = process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
+    defaults.push(...custom);
+  }
+
+  return defaults.filter(Boolean);
+};
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      const origins = getOrigins();
+      if (origins.includes(origin) || origins.includes('*') || process.env.ALLOWED_ORIGINS === '*') {
+        return callback(null, true);
       }
+
+      console.warn(`[CORS Blocked] Unauthorized request from origin: ${origin}`);
+      return callback(null, false);
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Idempotency-Key']
   })
 );
